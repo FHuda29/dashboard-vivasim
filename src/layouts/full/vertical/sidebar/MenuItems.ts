@@ -82,7 +82,7 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Dashboard',
     icon: IconAperture,
-    href: '/dashboards/modern',
+    href: '/dashboard',
   },
   /*
   {
@@ -160,19 +160,19 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Inventory',
     icon: IconChartDonut3,
-    href: '/frontend-pages/blog/',
+    href: '/inventory/list',
     children: [
       {
         id: uniqueId(),
         title: 'List Inventory',
         icon: IconPoint,
-        href: '/frontend-pages/blog/',
+        href: '/inventory/list',
       },
       {
         id: uniqueId(),
         title: 'Move Simcard to Partner',
         icon: IconPoint,
-        href: '/frontend-pages/blog/detail/streaming-video-way-before-it-was-cool-go-dark-tomorrow',
+        href: '/inventory/movesim',
       },
     ],
   },
@@ -180,13 +180,13 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Order',
     icon: IconBasket,
-    href: '/apps/ecommerce/',
+    href: '/order/list',
     children: [
       {
         id: uniqueId(),
         title: 'Order List',
         icon: IconPoint,
-        href: '/apps/ecommerce/shop',
+        href: '/order/list',
       },
       /*
       {
@@ -341,7 +341,7 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Product List - Master',
     icon: IconCurrencyDollar,
-    href: '/pages/pricing',
+    href: '/product/master',
   },
   {
     id: uniqueId(),
@@ -353,31 +353,25 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Partner',
     icon: IconHelp,
-    href: '/pages/faq',
+    href: '/partner/list',
   },
   {
     id: uniqueId(),
     title: 'Agent',
     icon: IconAppWindow,
-    href: '/landingpage',
+    href: '/agent/list',
   },
   {
     id: uniqueId(),
     title: 'User Management',
     icon: IconLayout,
-    href: '/widgets/cards',
+    href: '/user/list',
     children: [
       {
         id: uniqueId(),
         title: 'List User',
         icon: IconPoint,
-        href: '/widgets/cards',
-      },
-      {
-        id: uniqueId(),
-        title: 'Detail User',
-        icon: IconPoint,
-        href: '/widgets/banners',
+        href: '/user/list',
       },
       {
         id: uniqueId(),

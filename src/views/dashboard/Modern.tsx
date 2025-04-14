@@ -17,9 +17,16 @@ import WeeklyStats from 'src/components/dashboards/modern/WeeklyStats';
 import TopPerformers from 'src/components/dashboards/modern/TopPerformers';
 import Welcome from 'src/layouts/full/shared/welcome/Welcome';
 
+//api
+import ApiConfig  from "src/constants/apiConstants";
+
 const Modern = () => {
+
+  //console.log('API URL:', ApiConfig.apiUrl);
+  //console.log('API Key:', ApiConfig.apiKey);
+
   return (
-    (<PageContainer title="Modern Dashboard" description="this is Modern Dashboard page">
+    (<PageContainer title="Main Dashboard" description="this is Main Dashboard page">
       <Box>
         <Grid container spacing={3}>
           {/* column */}

@@ -7,6 +7,8 @@ import PageContainer from 'src/components/container/PageContainer';
 import img1 from 'src/assets/images/backgrounds/login-bg.svg';
 import Logo from 'src/layouts/full/shared/logo/Logo';
 import AuthLogin from '../authForms/AuthLogin';
+import LogoApps from 'src/assets/images/logos/vivasim_logo.png';
+import LogoMiniApps from 'src/assets/images/logos/vivasim_min_logo.png';
 
 const Login = () => (
   <PageContainer title="Login" description="this is Login page">
@@ -33,7 +35,8 @@ const Login = () => (
         }}>
         <Box position="relative">
           <Box px={3}>
-            <Logo />
+            {/*<Logo />*/}
+            <img src={LogoApps} width="20%"/> 
           </Box>
           <Box
             alignItems="center"
@@ -69,12 +72,13 @@ const Login = () => (
         }}>
         <Box p={4}>
           <AuthLogin
-            title="Welcome to Modernize"
+            title="Welcome to Vivasim"
             subtext={
               <Typography variant="subtitle1" color="textSecondary" mb={1}>
                 Your Admin Dashboard
               </Typography>
             }
+            /*
             subtitle={
               <Stack direction="row" spacing={1} mt={3}>
                 <Typography color="textSecondary" variant="h6" fontWeight="500">
@@ -92,7 +96,7 @@ const Login = () => (
                   Create an account
                 </Typography>
               </Stack>
-            }
+            }*/
           />
         </Box>
       </Grid>

@@ -94,6 +94,27 @@ const GredientChart = Loadable(lazy(() => import('../views/charts/GredientChart'
 const RadialbarChart = Loadable(lazy(() => import('../views/charts/RadialbarChart')));
 const LineChart = Loadable(lazy(() => import('../views/charts/LineChart')));
 
+//Inventory
+const Inventory = Loadable(lazy(() => import('../views/inventory/ListInventory')));
+const MoveSIMCard = Loadable(lazy(() => import('../views/inventory/MoveSIMCard')));
+
+//order
+const OrderList = Loadable(lazy(() => import('../views/order/OrderList')));
+
+//product 
+const MasterProduct = Loadable(lazy(() => import('../views/product/MasterProduct')));
+const ProductCreate = Loadable(lazy(() => import('../views/apps/product/Create')));
+
+//user
+const UserList = Loadable(lazy(() => import('../views/users/UserList')));
+const CreateUser = Loadable(lazy(() => import('../views/apps/user/Create')));
+
+//partner
+const PartnerList = Loadable(lazy(() => import('../views/partners/PartnerList')));
+
+//agent
+const AgentList = Loadable(lazy(() => import('../views/agents/AgentList')));
+
 // tables
 const BasicTable = Loadable(lazy(() => import('../views/tables/BasicTable')));
 const EnhanceTable = Loadable(lazy(() => import('../views/tables/EnhanceTable')));
@@ -174,8 +195,18 @@ const Router = [
     path: '/',
     element: <FullLayout />,
     children: [
-      { path: '/', element: <Navigate to="/dashboards/modern" /> },
-      { path: '/dashboards/modern', exact: true, element: <ModernDash /> },
+      //{ path: '/', element: <Navigate to="/dashboards/modern" /> },
+      { path: '/', element: <Navigate to="/auth/login" /> },
+      { path: '/dashboard', exact: true, element: <ModernDash /> },
+      { path: '/inventory/list', exact: true, element: <Inventory /> },
+      { path: '/inventory/movesim', exact: true, element: <MoveSIMCard /> },
+      { path: '/order/list', exact: true, element: <OrderList /> },
+      { path: '/product/master', exact: true, element: <MasterProduct /> },
+      { path: '/apps/product/create', element: <ProductCreate /> },
+      { path: '/user/list', exact: true, element: <UserList /> },
+      { path: '/apps/user/create', element: <CreateUser /> },
+      { path: '/partner/list', exact: true, element: <PartnerList /> },
+      { path: '/agent/list', exact: true, element: <AgentList /> },
       { path: '/dashboards/ecommerce', exact: true, element: <EcommerceDash /> },
       { path: '/apps/contacts', element: <Contacts /> },
       // { path: '/apps/blog/posts', element: <Blog /> },
