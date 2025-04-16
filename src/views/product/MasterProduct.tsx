@@ -133,12 +133,34 @@ const MasterProduct = () => {
   }
 
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectAll, setSelectAll] = React.useState(false);
+  //const [selectAll, setSelectAll] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
 
   const handleDelete = () => {
     setOpenDeleteDialog(true);
   };
+
+
+  //search
+  const handleSearchFilter = (event: any) => {
+      console.log(event.target.value);
+      setSearchTerm(event.target.value);
+      
+      const strtValue = event.target.value;
+      if(strtValue.length !== 0){
+          let end_point = apiUrl + "products/search?param="+strtValue;
+          axios
+              .get(end_point)
+              .then((response) => {
+                setProductMaster(response.data);
+              })
+              .catch((error) => {
+                  console.log(error);
+              });
+      }else{
+          fetchProductMaster();
+      }
+  }
 
   //row product
   const [productMaster, setProductMaster] = React.useState([]);
@@ -175,48 +197,39 @@ const MasterProduct = () => {
                     spacing={{ xs: 1, sm: 2, md: 4 }}
                 >
                     <TextField
-                    id="search"
-                    type="text"
-                    size="small"
-                    variant="outlined"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    InputProps={{
+                      id="search"
+                      type="text"
+                      size="small"
+                      variant="outlined"                    
+                      value={searchTerm}
+                      onChange={handleSearchFilter}
+                      InputProps={{
                         endAdornment: (
-                        <InputAdornment position="end">
+                          <InputAdornment position="end">
                             <IconSearch size={"16"} />
-                        </InputAdornment>
+                          </InputAdornment>
                         ),
-                    }}
+                      }}
                     />
                     <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        New Product
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        Import Product
-                    </Button>
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          component={Link}
+                          to="/apps/product/create"
+                      >
+                          New Product
+                      </Button>
+                      {/*
+                      <Button
+                          variant="contained"
+                          color="secondary"
+                          component={Link}
+                          to="/apps/product/create"
+                      >
+                          Import Product
+                      </Button>
+                      */}
                     </Box>
                 </Stack>
             </Box>
@@ -230,25 +243,25 @@ const MasterProduct = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <Typography variant="h6">Product ID</Typography>
+                    <Typography variant="subtitle2">Product ID</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Product Name</Typography>
+                    <Typography variant="subtitle2">Product Name</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Country</Typography>
+                    <Typography variant="subtitle2">Country</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Days</Typography>
+                    <Typography variant="subtitle2">Days</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Quota</Typography>
+                    <Typography variant="subtitle2">Quota</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Selling Price</Typography>
+                    <Typography variant="subtitle2">Selling Price</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Status</Typography>
+                    <Typography variant="subtitle2">Status</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -259,40 +272,42 @@ const MasterProduct = () => {
                 ).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography variant="subtitle2">{row.ProductID}</Typography>
+                      <Typography variant="caption">{row.package_id}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.ProductName}
+                      <Typography variant="caption">
+                        {row.package_name}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.Country}
+                      <Typography variant="caption">
+                        {row.country}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {numberFormat(row.Quota)}
+                      <Typography variant="caption">
+                        {numberFormat(row.days)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        IDR {numberFormat(row.SellingPrice)}
+                      <Typography variant="caption">
+                        {numberFormat(row.quota)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="subtitle2">{formatDate(row.Created)}</Typography>
+                      <Typography variant="caption">
+                        IDR {numberFormat(row.selling_price)}
+                      </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
                         color={
-                          row.Status == 1
+                          row.status === 'Ready'
                             ? 'success'
-                            : row.Status == 0
+                            : row.status === 'Used'
                               ? 'warning'
-                              : row.Status == 2
+                              : row.status === 'Close'
                                 ? 'error'
                                 : 'secondary'
                         }
@@ -300,7 +315,7 @@ const MasterProduct = () => {
                           borderRadius: '6px',
                         }}
                         size="small"
-                        label={row.Status == 1 ? 'Ready' : row.Status == 2 ? 'Expired' : 'Pending'}
+                        label={row.status}
                       />
                     </TableCell>
                   </TableRow>
@@ -308,7 +323,7 @@ const MasterProduct = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={6} />
+                    <TableCell colSpan={7} />
                   </TableRow>
                 )}
               </TableBody>
@@ -316,7 +331,7 @@ const MasterProduct = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={6}
+                    colSpan={7}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

@@ -347,7 +347,7 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Product List - Partner',
     icon: IconUserCircle,
-    href: '/pages/account-settings',
+    href: '/product/partner',
   },
   {
     id: uniqueId(),

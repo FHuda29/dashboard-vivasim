@@ -54,15 +54,26 @@ export interface ProductType {
 }
 
 export interface ProductList {
-    Seq: number;
-    ProductID: string;
-    ProductName: string;
-    Country: string;
-    Days: number;
-    Quota: number;
-    SellingPrice: number;
-    Status: number;
-    Created: string;
+    seq: number;
+    package_id: string;
+    package_name: string;
+    country: string;
+    days: number;
+    quota: number | string;
+    selling_price: number;
+    status: string;
+}
+
+export interface PartnerProductList {
+    seq: number;
+    package_id: string;
+    package_name: string;
+    country: string;
+    days: number;
+    quota: number | string;
+    selling_price: number;
+    status: string;
+    cobrand_id: string;
 }
 
 export interface OrderListType {
@@ -95,38 +106,43 @@ export interface userList {
   }
 
   export interface partnerList {
-    partnerSeq: number;
-    PartnerID: string;
-    PartnerName: string;
-    PartnerPIC: string;
-    PaymentType: string;
-    TotalInvoice: number;
-    BasePrice: number;
-    TotalProfit: number;
-    Created: string;
+    seq: number;
+    master_id: string;
+    cobrand_id: string;
+    cobrand_name: string;
+    pic: string;
+    deposit: number;
+    ar: number;
+    sms_internal_reply: string;
+    payment_type: string;
   }
 
   export interface agentList {
-    Seq: number;
-    AgentCode: string;
-    AgentID: string;
-    IDType: string;
-    Name: string;
-    Address: string;
-    OfficePhone: string;
-    ContactPerson: string;
-    ContactPhone: string;
-    Email: string;
-    AccountManager: string;
-    ContractNumber: string;
-    PaymentNote: string;
-    BankName: string;
-    BankAccNo: string;
-    BankAccName: string;
-    Commission: string;
-    JoinDate: string;
-    Status: number;
-    Note: string;
+    seq: number;
+    agent_code: string;
+    agent_id: string;
+    id_type: string;
+    name: string;
+    address: string;
+    kelurahan: string;
+    kecamatan: string;
+    city: string;
+    province: string;
+    office_phone: string;
+    contact_person: string;
+    contact_phone: string;
+    email: string;
+    commission_pct: number;
+    join_date: string;
+    status: string;
+    note: string;
+    account_manager: string;
+    contract_no: string;
+    payment_note: string;
+    bank_name: string;
+    bank_acc_no: string;
+    bank_acc_name: string;
+    cobrand_id: string;
   }
 
 export  interface companyType{

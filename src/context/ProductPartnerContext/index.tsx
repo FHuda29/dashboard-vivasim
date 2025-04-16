@@ -1,23 +1,23 @@
 'use client'
 import React, { createContext, useEffect, useState } from 'react';
-import { ProductList } from 'src/utils/Utils';
+import { PartnerProductList } from 'src/utils/Utils';
 import ApiConfig  from "src/constants/apiConstants";
 
 import axios from '../../utils/axios';
 
-interface ProductContextType {
-    products: ProductList[];
+interface ProductPartnerContextType {
+    products: PartnerProductList[];
     loading: boolean;
     error: Error | null;
     //deleteEmail: () => {},
-    addProduct: (newProduct: ProductList) => void;
-    updateProduct: (updatedProduct: ProductList) => void;
+    addProduct: (newProduct: PartnerProductList) => void;
+    updateProduct: (updatedProduct: PartnerProductList) => void;
 }
 
-export const ProductContext = createContext<ProductContextType | any>(undefined);
+export const ProductPartnerContext = createContext<ProductPartnerContextType | any>(undefined);
 
-export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [products, setProducts] = useState<ProductList[]>([]);
+export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [products, setProducts] = useState<PartnerProductList[]>([]);
     const [loading, setLoading] = useState(true);
     const [error] = useState<Error | null>(null);
 
@@ -25,7 +25,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const fetchData = async () => {
             try {
                 //const response = await axios.get('/api/data/invoicedata');
-                const response = await axios.get(ApiConfig.apiUrl + 'products');
+                const response = await axios.get(ApiConfig.apiUrl + 'product/partner');
+                console.log("edit product partner: ",response.data);
                 setProducts(response.data);
                 setLoading(false);
             } catch (error) {
@@ -49,11 +50,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     };
 
-    const addProduct = async (newProduct: ProductList) => {
+    const addProduct = async (newProduct: PartnerProductList) => {
         try {
-            //console.log("newProduct: ",newProduct);
-            //console.log("json newProduct: ",JSON.stringify(newProduct));
-            const response = await axios.post(ApiConfig.apiUrl + 'products', newProduct);
+            console.log("newProduct: ",newProduct);
+            console.log("json newProduct: ",JSON.stringify(newProduct));
+            const response = await axios.post(ApiConfig.apiUrl + 'product/partner', newProduct);
             const addedProduct = response.data;
             setProducts((prevProduct) => [...prevProduct, addedProduct]);
         } catch (error) {
@@ -62,21 +63,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     //  Function to update an invoice
-    const updateProduct = async (updatedProduct: ProductList) => {
+    const updateProduct = async (updatedProduct: PartnerProductList) => {
         try {
-            const response = await axios.put('/api/data/invoicedata/updateinvoice', updatedProduct);
+            const seq = updatedProduct.seq;
+            const response = await axios.put(ApiConfig.apiUrl + 'product/partner/salling/'+seq, updatedProduct);
             const updated = response.data;
             setProducts((prevProducts) =>
-                prevProducts.map((products) => (products.seq === updated.Seq ? updated : products))
+                prevProducts.map((products) => (products.seq === updated.seq ? updated : products))
             );
         } catch (error) {
-            console.error('Error updating products:', error);
+            console.error('Error updating product partner:', error);
         }
     };
 
     return (
-        <ProductContext.Provider value={{ products, loading, error, deleteProduct, addProduct, updateProduct }}>
+        <ProductPartnerContext.Provider value={{ products, loading, error, deleteProduct, addProduct, updateProduct }}>
             {children}
-        </ProductContext.Provider>
+        </ProductPartnerContext.Provider>
     );
 };

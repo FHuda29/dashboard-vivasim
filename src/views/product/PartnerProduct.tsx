@@ -20,7 +20,12 @@ import {
   Stack,
   TextField,
   InputAdornment,
-  Button
+  Button,
+  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle
 } from '@mui/material';
 
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -30,22 +35,16 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-
-import img1 from 'src/assets/images/profile/user-1.jpg';
-import img2 from 'src/assets/images/profile/user-2.jpg';
-import img3 from 'src/assets/images/profile/user-3.jpg';
-import img4 from 'src/assets/images/profile/user-4.jpg';
-import img5 from 'src/assets/images/profile/user-5.jpg';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
-import { numberFormat, agentList, formatDate } from "src/utils/Utils";
+import { numberFormat, PartnerProductList, formatDate } from "src/utils/Utils";
 //api
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
 import axios from 'axios';
-import { IconSearch, IconTrash } from '@tabler/icons-react';
+import { IconEdit, IconEye, IconHistory, IconSearch, IconTrash } from '@tabler/icons-react';
 
 const apiUrl = ApiConfig.apiUrl;
 
@@ -113,25 +112,26 @@ const BCrumb = [
     title: 'Home',
   },
   {
-    title: 'Agent',
+    title: 'Partner',
   },
 ];
 
-const AgentList = () => {
+const PartnerProduct = () => {
+    const navigate = useNavigate();
     useEffect(() => {
-        //load partner list
-        fetchAgentList();
+        //load product
+        fetchProductMaster();
 
     }, []);
 
   //get all product
-  const fetchAgentList = async () => {
-    let end_point = apiUrl + "agents";
+  const fetchProductMaster = async () => {
+    let end_point = apiUrl + "product/partner";
     axios
         .get(end_point)
         .then((response) => {
             //console.log(response);
-            setAgents(response.data);
+            setProductPartner(response.data);
         })
         .catch((error) => {
             console.log(error);
@@ -139,16 +139,13 @@ const AgentList = () => {
   }
 
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectAll, setSelectAll] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const [seqID, setSeqID] = React.useState(0);
 
-  const handleDelete = () => {
-    setOpenDeleteDialog(true);
-  };
 
-  //row agents
-  const [agents, setAgents] = React.useState([]);
-  const rows: agentList[] = agents;
+  //row product
+  const [productPartner, setProductPartner] = React.useState([]);
+  const rows: PartnerProductList[] = productPartner;
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -166,12 +163,62 @@ const AgentList = () => {
     setPage(0);
   };
 
+  //search
+  const handleSearchFilter = (event: any) => {
+    setSearchTerm(event.target.value);
+    
+    const strtValue = event.target.value;
+    if(strtValue.length !== 0){
+        let end_point = apiUrl + "product/partner/search?param="+strtValue;
+        axios
+            .get(end_point)
+            .then((response) => {
+                setProductPartner(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }else{
+        fetchProductMaster();
+    }
+  }
+
+  //edit
+  /*
+  const handleEdit = (seq: any) => {
+      console.log("seq: ",seq);
+      navigate(`/product/partner/edit/${seq}`);
+  }
+  */
+ 
+  // Handle opening delete confirmation dialog
+  const handleDelete = (seq: any) => {
+    setSeqID(seq);
+    setOpenDeleteDialog(true);
+  };
+
+  // Handle closing delete confirmation dialog
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+  
+  // Handle confirming deletion of selected products
+  const handleConfirmDelete = async () => {
+    try {
+        await axios.delete(apiUrl + 'product/partner/delete/'+seqID);
+        setOpenDeleteDialog(false);
+        fetchProductMaster();
+    } catch (error) {
+        console.error('Error deleting products:', error);
+    }
+  };
+
   return (
-    <PageContainer title="Agent" description="this is agent page">
+    <PageContainer title="Products" description="this is partner products page">
       {/* breadcrumb */}
-      <Breadcrumb title="Agent" items={BCrumb} />
+      <Breadcrumb title="Products" items={BCrumb} />
       {/* end breadcrumb */}
-      <ParentCard title="Agent List">
+      <ParentCard title="Partner Product List">
         <BlankCard>
             <Box>
                 <Stack
@@ -181,21 +228,22 @@ const AgentList = () => {
                     spacing={{ xs: 1, sm: 2, md: 4 }}
                 >
                     <TextField
-                    id="search"
-                    type="text"
-                    size="small"
-                    variant="outlined"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        endAdornment: (
-                        <InputAdornment position="end">
-                            <IconSearch size={"16"} />
-                        </InputAdornment>
-                        ),
-                    }}
+                        id="search"
+                        type="text"
+                        size="small"
+                        variant="outlined"
+                        placeholder="Search"
+                        value={searchTerm}
+                        onChange={handleSearchFilter}
+                        InputProps={{
+                            endAdornment: (
+                            <InputAdornment position="end">
+                                <IconSearch size={"16"} />
+                            </InputAdornment>
+                            ),
+                        }}
                     />
+                    {/*
                     <Box display="flex" gap={1}>
                     {selectAll && (
                         <Button
@@ -211,11 +259,20 @@ const AgentList = () => {
                         variant="contained"
                         color="primary"
                         component={Link}
-                        to="/apps/user/create"
+                        to="/apps/product/create"
                     >
-                        Add Agent
+                        New Product
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        component={Link}
+                        to="/apps/product/create"
+                    >
+                        Import Product
                     </Button>
                     </Box>
+                    */}
                 </Stack>
             </Box>
           <TableContainer>
@@ -228,61 +285,31 @@ const AgentList = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <Typography variant="subtitle2">Agent Code</Typography>
+                    <Typography variant="subtitle2">Action</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Agent ID</Typography>
+                    <Typography variant="subtitle2">Partner</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">ID Type</Typography>
+                    <Typography variant="subtitle2">Product ID</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Name</Typography>
+                    <Typography variant="subtitle2">Product Name</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Address</Typography>
+                    <Typography variant="subtitle2">Country</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Office Phone</Typography>
+                    <Typography variant="subtitle2">Days</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Contact Person</Typography>
+                    <Typography variant="subtitle2">Quota</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Contact Phone</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Email</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Account Manager</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Contract Number</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Payment Note</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Bank Name</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Bank Acc No</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Bank Acc Name</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Commission %</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Join Date</Typography>
+                    <Typography variant="subtitle2">Selling Price</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="subtitle2">Status</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Note</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -293,108 +320,79 @@ const AgentList = () => {
                 ).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography variant="caption">{row.agent_code}</Typography>
+                        <Tooltip title="Edit">
+                            <IconButton 
+                                color="success" 
+                                component={Link}
+                                to={`/product/partner/edit/${row.seq}`}>
+                                <IconEdit width={22} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                            <IconButton 
+                                color="error"
+                                onClick={() => handleDelete(row.seq)}
+                                >
+                                <IconTrash width={22} />
+                            </IconButton>
+                        </Tooltip>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">{row.cobrand_id}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">{row.package_id}</Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                        {row.agent_id}
+                        {row.package_name}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
                       <Typography variant="caption">
-                        {row.id_type}
+                        {row.country}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                      {row.id_type}
+                        {numberFormat(row.days)}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                      {row.address}
+                        {numberFormat(row.quota)}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                      {row.office_phone}
+                        IDR {numberFormat(row.selling_price)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                      {row.contact_person}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.contact_phone}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.email}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.account_manager}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.contract_no}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.payment_note}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.bank_name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.bank_acc_no}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.bank_acc_name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.commission_pct}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {formatDate(row.join_date)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                        <Chip
-                            color={row.status === 'Active' ? 'success' : row.status === 'InActive' ? 'warning' : row.status == 'Blocked' ? 'error' : 'secondary'}
-                            sx={{borderRadius: '6px',}}
-                            size="small"
-                            label={row.status === 'Active' ? 'Active' : row.status === 'InActive' ? 'Inactive' : 'Blocked'}
-                        />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                      {row.note}
-                      </Typography>
+                      <Chip
+                        color={
+                          row.status === 'Ready'
+                            ? 'success'
+                            : row.status === 'Used'
+                              ? 'warning'
+                              : row.status === 'Close'
+                                ? 'error'
+                                : 'secondary'
+                        }
+                        sx={{
+                          borderRadius: '6px',
+                        }}
+                        size="small"
+                        label={row.status}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={19} />
+                    <TableCell colSpan={9} />
                   </TableRow>
                 )}
               </TableBody>
@@ -402,7 +400,7 @@ const AgentList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={19}
+                    colSpan={9}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
@@ -419,8 +417,26 @@ const AgentList = () => {
           </TableContainer>
         </BlankCard>
       </ParentCard>
+      <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogContent>
+                Are you sure you want to delete selected product SEQ ? {seqID}
+            </DialogContent>
+            <DialogActions>
+                <Button variant="contained" onClick={handleCloseDeleteDialog}>
+                  Cancel
+                </Button>
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={handleConfirmDelete}
+                >
+                  Delete
+                </Button>
+            </DialogActions>
+        </Dialog>
     </PageContainer>
   );
 };
 
-export default AgentList;
+export default PartnerProduct;

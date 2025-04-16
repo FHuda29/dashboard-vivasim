@@ -228,25 +228,25 @@ const PartnerList = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <Typography variant="h6">Partner ID	</Typography>
+                    <Typography variant="subtitle2">Partner ID	</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Partner Name</Typography>
+                    <Typography variant="subtitle2">Partner Name</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Partner PIC</Typography>
+                    <Typography variant="subtitle2">Partner PIC</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Payment Type</Typography>
+                    <Typography variant="subtitle2">Payment Type</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Total Invoice</Typography>
+                    <Typography variant="subtitle2">Total Invoice</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Base Price</Typography>
+                    <Typography variant="subtitle2">Base Price</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Total Profit</Typography>
+                    <Typography variant="subtitle2">Total Profit</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -257,37 +257,37 @@ const PartnerList = () => {
                 ).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography variant="subtitle2">{row.PartnerID}</Typography>
+                      <Typography variant="caption">{row.cobrand_id}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.PartnerName}
+                      <Typography variant="caption">
+                        {row.cobrand_name}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.PartnerPIC}
+                      <Typography variant="caption">
+                        {row.pic}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      {row.PaymentType}
+                      <Typography variant="caption">
+                      {row.payment_type}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      IDR {numberFormat(row.TotalInvoice)}
+                      <Typography variant="caption">
+                      IDR {numberFormat(row.deposit)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      IDR {numberFormat(row.BasePrice)}
+                      <Typography variant="caption">
+                      IDR {numberFormat(row.ar)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      IDR {numberFormat(row.TotalProfit)}
+                      <Typography variant="caption">
+                      IDR 0
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -295,7 +295,7 @@ const PartnerList = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={6} />
+                    <TableCell colSpan={7} />
                   </TableRow>
                 )}
               </TableBody>
@@ -303,7 +303,7 @@ const PartnerList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={6}
+                    colSpan={7}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

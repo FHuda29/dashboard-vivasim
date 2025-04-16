@@ -1,6 +1,6 @@
 
 import React, { useState, useContext, useEffect } from 'react';
-import { ProductContext } from 'src/context/ProductContext';
+import { ProductPartnerContext } from 'src/context/ProductPartnerContext';
 import {
   Alert,
   Button,
@@ -20,16 +20,18 @@ import {
   Divider,
   Grid2 as Grid,
 } from '@mui/material';
-import { useNavigate } from 'react-router';
-import { format, isValid } from 'date-fns';
+import { useNavigate, useParams } from 'react-router';
+//import { format, isValid } from 'date-fns';
 //import { IconPlus, IconSquareRoundedPlus, IconTrash } from '@tabler/icons-react';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 //import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 
-const CreateProduct = () => {
-  const { addProduct, products } = useContext(ProductContext);
+const CreateProductPartner = () => {
+  const { seq } = useParams(); 
+  
+
+  const { addProduct, products } = useContext(ProductPartnerContext);
   const [showAlert, setShowAlert] = useState(false);
   const router = useNavigate();
   const [formData, setFormData] = useState({
@@ -40,12 +42,15 @@ const CreateProduct = () => {
     days: 0,
     quota: '',
     selling_price: 0,
-    status: 'Ready'
+    status: '',
+    cobrand_id: ''
   });
 
   useEffect(() => {
+    console.log("seq : ",seq);
     if (products.length > 0) {
       const lastId = products[products.length - 1].seq;
+      //console.log("lastId : ",lastId);
       setFormData((prevData: any) => ({
         ...prevData,
         seq: lastId + 1,
@@ -63,8 +68,10 @@ const CreateProduct = () => {
     const { name, value } = e.target;
     setFormData((prevData) => {
       const newFormData = { ...prevData, [name]: value };
-      //return {...newFormData};
-      return newFormData;
+      //const totals = calculateTotals(newFormData.orders);
+      return {
+        ...newFormData
+      };
     });
   };
   
@@ -80,21 +87,22 @@ const CreateProduct = () => {
         days: 0,
         quota: '',
         selling_price: 0,
-        status: 'Ready'
+        status: '',
+        cobrand_id: ''
       });
       setShowAlert(true);
       setTimeout(() => {
         setShowAlert(false);
       }, 5000);
       //router('/apps/invoice/list');
-      router('/product/master');
+      router('/product/partner');
     } catch (error) {
       console.error('Error adding product:', error);
     }
   };
 
-  const parsedDate = new Date();
-  const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
+  //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
+  //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
 
   return (<>
     <form onSubmit={handleSubmit}>
@@ -105,24 +113,25 @@ const CreateProduct = () => {
           justifyContent="space-between"
           mb={3}
         >
-          <Typography variant="h5"># {formData.seq}</Typography>
+          <Typography variant="h5">SEQ# {seq}</Typography>
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
               color="error"
               onClick={() => {
                 //router('/apps/invoice/list');
-                router('/product/master');
+                router('/product/partner');
               }}
             >
               Cancel
             </Button>
             <Button type="submit" variant="contained" color="primary">
-              Save Product
+              Save Record
             </Button>
           </Box>
         </Stack>
         <Divider></Divider>
+        {/*
         <Stack
           direction="row"
           spacing={{ xs: 1, sm: 2, md: 4 }}
@@ -131,37 +140,53 @@ const CreateProduct = () => {
           mb={3}
         >
           <Box>
-            <CustomFormLabel htmlFor="status">Status</CustomFormLabel>
+            <CustomFormLabel htmlFor="demo-simple-select">Order Status</CustomFormLabel>
+
             <CustomSelect
-              labelId="status"
-              id="status"
-              name="status"
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
               value={formData.status}
               onChange={handleChange}
+              disabled
             >
-              <MenuItem value="Ready">Ready</MenuItem>
-              <MenuItem value="Used">Used</MenuItem>
-              <MenuItem value="Close">Close</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
+              <MenuItem value="Shipped">Shipped</MenuItem>
+              <MenuItem value="Delivered">Delivered</MenuItem>
             </CustomSelect>
           </Box>
           <Box textAlign="right">
-            <CustomFormLabel htmlFor="demo-simple-select">Create Date</CustomFormLabel>
+            <CustomFormLabel htmlFor="demo-simple-select">Order Date</CustomFormLabel>
             <Typography variant="body1"> {formattedOrderDate}</Typography>
           </Box>
         </Stack>
         <Divider></Divider>
+        */}    
         <Grid container spacing={3} mb={4}>
           <Grid
             size={{
               xs: 12,
               sm: 6
             }}>
-            <CustomFormLabel htmlFor="ProductID">ProductID</CustomFormLabel>
+            <CustomFormLabel htmlFor="ProductID">Partner ID</CustomFormLabel>
             <CustomTextField
-              id="package_id"
-              name="package_id"
-              value={formData.package_id}
+              id="PartnerID"
+              name="PartnerID"
               onChange={handleChange}
+              value={formData.cobrand_id}
+              fullWidth
+            />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6
+            }}>
+            <CustomFormLabel htmlFor="PackageID">Package ID</CustomFormLabel>
+            <CustomTextField
+              id="PackageID"
+              name="PackageID"
+              onChange={handleChange}
+              value={formData.package_id}
               fullWidth
             />
           </Grid>
@@ -171,7 +196,7 @@ const CreateProduct = () => {
               sm: 6
             }}>
             <CustomFormLabel
-              htmlFor="ProductName"
+              htmlFor="PackageName"
               sx={{
                 mt: {
                   xs: 0,
@@ -179,11 +204,11 @@ const CreateProduct = () => {
                 },
               }}
             >
-              Product Name
+              Package Name
             </CustomFormLabel>
             <CustomTextField
-              id="package_name"
-              name="package_name"
+              id="PackageName"
+              name="PackageName"
               value={formData.package_name}
               onChange={handleChange}
               fullWidth
@@ -203,8 +228,7 @@ const CreateProduct = () => {
               Country
             </CustomFormLabel>
             <CustomTextField
-              id="country"
-              name="country"
+              name="Country"
               value={formData.country}
               onChange={handleChange}
               fullWidth
@@ -224,12 +248,10 @@ const CreateProduct = () => {
               Days
             </CustomFormLabel>
             <CustomTextField
-              id="days"
-              name="days"
+              name="Days"
               value={formData.days}
               onChange={handleChange}
               fullWidth
-              inputProps={{ type: 'number' }}
             />
           </Grid>
           <Grid
@@ -246,8 +268,7 @@ const CreateProduct = () => {
               Quota
             </CustomFormLabel>
             <CustomTextField
-              id="quota"
-              name="quota"
+              name="Quota"
               value={formData.quota}
               onChange={handleChange}
               fullWidth
@@ -267,19 +288,17 @@ const CreateProduct = () => {
               Selling Price
             </CustomFormLabel>
             <CustomTextField
-              id="selling_price"
-              name="selling_price"
+              name="SellingPrice"
               value={formData.selling_price}
               onChange={handleChange}
               fullWidth
-              inputProps={{ type: 'number' }}
             />
           </Grid>
         </Grid>
         
         {showAlert && (
           <Alert severity="success" sx={{ position: 'fixed', top: 16, right: 16 }}>
-            Product added successfully.
+            Product edited successfully.
           </Alert>
         )}
       </Box>
@@ -287,4 +306,4 @@ const CreateProduct = () => {
   </>);
 };
 
-export default CreateProduct;
+export default CreateProductPartner;

@@ -105,6 +105,10 @@ const OrderList = Loadable(lazy(() => import('../views/order/OrderList')));
 const MasterProduct = Loadable(lazy(() => import('../views/product/MasterProduct')));
 const ProductCreate = Loadable(lazy(() => import('../views/apps/product/Create')));
 
+//product partner
+const PartnerProduct = Loadable(lazy(() => import('../views/product/PartnerProduct')));
+const ProductPartnerEdit = Loadable(lazy(() => import('../views/apps/productpartner/Edit')));  
+
 //user
 const UserList = Loadable(lazy(() => import('../views/users/UserList')));
 const CreateUser = Loadable(lazy(() => import('../views/apps/user/Create')));
@@ -202,7 +206,9 @@ const Router = [
       { path: '/inventory/movesim', exact: true, element: <MoveSIMCard /> },
       { path: '/order/list', exact: true, element: <OrderList /> },
       { path: '/product/master', exact: true, element: <MasterProduct /> },
+      { path: '/product/partner', exact: true, element: <PartnerProduct /> },
       { path: '/apps/product/create', element: <ProductCreate /> },
+      { path: '/product/partner/edit/:seq', element: <ProductPartnerEdit /> },
       { path: '/user/list', exact: true, element: <UserList /> },
       { path: '/apps/user/create', element: <CreateUser /> },
       { path: '/partner/list', exact: true, element: <PartnerList /> },
