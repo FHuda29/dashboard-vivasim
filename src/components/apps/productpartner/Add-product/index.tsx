@@ -26,10 +26,19 @@ import { useNavigate, useParams } from 'react-router';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 //import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
+import axios from 'axios';
+import ApiConfig  from "src/constants/apiConstants";
+import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
+import { VisibilityOff, Visibility } from '@mui/icons-material';
+const apiUrl = ApiConfig.apiUrl;
 
 const CreateProductPartner = () => {
-  const { seq } = useParams(); 
+  //const { seq } = useParams(); 
   
+  const [partners, setPartners] = React.useState([]);
+  const [agents, setAgents] = React.useState([]);
+  const [userLevel, setUserLevel] = useState('');
+  const [userSession, setUserSession] = useState('');
 
   const { addProduct, products } = useContext(ProductPartnerContext);
   const [showAlert, setShowAlert] = useState(false);
@@ -47,7 +56,32 @@ const CreateProductPartner = () => {
   });
 
   useEffect(() => {
-    console.log("seq : ",seq);
+    const data_success_login = localStorage.getItem('data_success_login');
+    if (data_success_login) {
+        const parsedData = JSON.parse(data_success_login);
+        //console.log('user_name:', parsedData.user_name);
+        console.log('session_name:', parsedData.session_name);
+        console.log('session_level:', parsedData.session_level);
+        //console.log('last_login_time:', parsedData.last_login_time);
+        //console.log('blocked:', parsedData.blocked);
+        setUserLevel(parsedData.session_level);
+        setUserSession(parsedData.session_name);
+        
+        setFormData((prevData: any) => ({
+          ...prevData,
+          cobrand_id: parsedData.session_name
+        }));
+        
+        if(parsedData.session_level.toLowerCase() === 'partner'){
+          fetchAgentListCobrand((parsedData.session_name));
+        }else{
+          //load partner list
+          fetchPartnerList();
+        }
+    }
+
+    
+
     if (products.length > 0) {
       const lastId = products[products.length - 1].seq;
       //console.log("lastId : ",lastId);
@@ -94,7 +128,7 @@ const CreateProductPartner = () => {
       setTimeout(() => {
         setShowAlert(false);
       }, 5000);
-      //router('/apps/invoice/list');
+      
       router('/product/partner');
     } catch (error) {
       console.error('Error adding product:', error);
@@ -103,6 +137,31 @@ const CreateProductPartner = () => {
 
   //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
   //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
+
+  const fetchPartnerList = async () => {
+      let end_point = apiUrl + "partners";
+      axios
+          .get(end_point)
+          .then((response) => {
+              //console.log(response);
+              setPartners(response.data);
+          })
+          .catch((error) => {
+              console.log(error);
+          });
+  }
+
+  const fetchAgentListCobrand = async (cobrand_id:string) => {
+      let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+      axios
+          .get(end_point)
+          .then((response) => {
+            setAgents(response.data);
+          })
+          .catch((error) => {
+              console.log(error);
+          });
+  }
 
   return (<>
     <form onSubmit={handleSubmit}>
@@ -113,7 +172,7 @@ const CreateProductPartner = () => {
           justifyContent="space-between"
           mb={3}
         >
-          <Typography variant="h5">SEQ# {seq}</Typography>
+          <Typography variant="h5"># {formData.seq}</Typography>
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
@@ -162,34 +221,64 @@ const CreateProductPartner = () => {
         <Divider></Divider>
         */}    
         <Grid container spacing={3} mb={4}>
+          {userLevel.toLowerCase() === 'partner' ? (
+            <Grid
+              size={{
+                xs: 12,
+                sm: 12
+              }}>
+              <CustomFormLabel htmlFor="cobrand_id">Agent Code</CustomFormLabel>
+              <CustomSelect
+                id="cobrand_id"
+                name="cobrand_id"
+                value={formData.cobrand_id}
+                onChange={handleChange}
+                fullWidth
+                >
+                {agents.map((agent: any) => (
+                  <MenuItem key={agent.seq} value={agent.cobrand_id}>
+                    {agent.cobrand_id} - {agent.agent_code}
+                  </MenuItem>
+                ))}
+              </CustomSelect>
+            </Grid>
+          ):(
+            <Grid
+              size={{
+                xs: 12,
+                sm: 12
+              }}>
+              <CustomFormLabel htmlFor="cobrand_id">Partner ID</CustomFormLabel>
+              <CustomSelect
+                id="cobrand_id"
+                name="cobrand_id"
+                value={formData.cobrand_id}
+                onChange={handleChange}
+                fullWidth
+                >
+                {partners.map((partner: any) => (
+                  <MenuItem key={partner.seq} value={partner.cobrand_id}>
+                    {partner.cobrand_id} - {partner.cobrand_name}
+                  </MenuItem>
+                ))}
+              </CustomSelect>
+            </Grid>
+          )}
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
-            <CustomFormLabel htmlFor="ProductID">Partner ID</CustomFormLabel>
+            <CustomFormLabel htmlFor="package_id">Package ID</CustomFormLabel>
             <CustomTextField
-              id="PartnerID"
-              name="PartnerID"
-              onChange={handleChange}
-              value={formData.cobrand_id}
-              fullWidth
-            />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 6
-            }}>
-            <CustomFormLabel htmlFor="PackageID">Package ID</CustomFormLabel>
-            <CustomTextField
-              id="PackageID"
-              name="PackageID"
+              id="package_id"
+              name="package_id"
               onChange={handleChange}
               value={formData.package_id}
               fullWidth
             />
           </Grid>
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -214,6 +303,8 @@ const CreateProductPartner = () => {
               fullWidth
             />
           </Grid>
+          */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -274,13 +365,14 @@ const CreateProductPartner = () => {
               fullWidth
             />
           </Grid>
+          */}
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel
-              htmlFor="SellingPrice"
+              htmlFor="selling_price"
               sx={{
                 mt: 0,
               }}
@@ -288,7 +380,8 @@ const CreateProductPartner = () => {
               Selling Price
             </CustomFormLabel>
             <CustomTextField
-              name="SellingPrice"
+              id="selling_price"
+              name="selling_price"
               value={formData.selling_price}
               onChange={handleChange}
               fullWidth
@@ -298,7 +391,7 @@ const CreateProductPartner = () => {
         
         {showAlert && (
           <Alert severity="success" sx={{ position: 'fixed', top: 16, right: 16 }}>
-            Product edited successfully.
+            Product created successfully.
           </Alert>
         )}
       </Box>

@@ -46,6 +46,7 @@ import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
 import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
+import { useNavigate } from 'react-router';
 
 const apiUrl = ApiConfig.apiUrl;
 
@@ -118,10 +119,29 @@ const BCrumb = [
 ];
 
 const AgentList = () => {
-    useEffect(() => {
-        //load partner list
-        fetchAgentList();
+    const router = useNavigate();
 
+    useEffect(() => {
+
+      const data_success_login = localStorage.getItem('data_success_login');
+      if (data_success_login) {
+        const parsedData = JSON.parse(data_success_login);
+        console.log('user_name:', parsedData.user_name);
+        console.log('session_name:', parsedData.session_name);
+        console.log('session_level:', parsedData.session_level);
+        console.log('last_login_time:', parsedData.last_login_time);
+        console.log('blocked:', parsedData.blocked);
+
+        if(parsedData.session_level.toLowerCase() === 'partner'){
+          //const user_login = parsedData.session_name.split('-')[0];
+          fetchAgentListCobrand(parsedData.session_name);
+        }else{
+          //load partner list by HO
+          fetchAgentList();
+        }
+      }else{
+        router('/auth/login');
+      }
     }, []);
 
   //get all product
@@ -131,6 +151,18 @@ const AgentList = () => {
         .get(end_point)
         .then((response) => {
             //console.log(response);
+            setAgents(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  const fetchAgentListCobrand = async (cobrand_id:string) => {
+    let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+    axios
+        .get(end_point)
+        .then((response) => {
             setAgents(response.data);
         })
         .catch((error) => {
@@ -197,21 +229,11 @@ const AgentList = () => {
                     }}
                     />
                     <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
                     <Button
                         variant="contained"
                         color="primary"
                         component={Link}
-                        to="/apps/user/create"
+                        to="/apps/agent/create"
                     >
                         Add Agent
                     </Button>
@@ -308,7 +330,7 @@ const AgentList = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                      {row.id_type}
+                      {row.name}
                       </Typography>
                     </TableCell>
                     <TableCell>

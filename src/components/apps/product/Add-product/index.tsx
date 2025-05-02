@@ -118,7 +118,7 @@ const CreateProduct = () => {
               Cancel
             </Button>
             <Button type="submit" variant="contained" color="primary">
-              Save Product
+              Save Record
             </Button>
           </Box>
         </Stack>

@@ -211,7 +211,7 @@ const PartnerList = () => {
                         variant="contained"
                         color="primary"
                         component={Link}
-                        to="/apps/user/create"
+                        to="/apps/partner/create"
                     >
                         Add Partner
                     </Button>

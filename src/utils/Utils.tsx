@@ -28,6 +28,11 @@ export const generateRandomString = (length: any) => {
     return result;
 }
 
+export const generateTrxId = () => {
+    const date = new Date();
+    return format(date, "yyyyMMddhhmmss");
+};
+
 export const numberFormat = (nominal: any) => {
     if (nominal != null) {
       //return nominal.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
@@ -40,6 +45,11 @@ export const numberFormat = (nominal: any) => {
 export const formatDate = (dateString) => {
     const date = new Date(dateString);
     return format(date, "dd MMM yyyy, hh:mm:ss");
+};
+
+export const currentDate = () => {
+    const date = new Date();
+    return format(date, "yyyy-MM-dd hh:mm:ss");
 };
 
 export interface ProductType {
@@ -76,6 +86,31 @@ export interface PartnerProductList {
     cobrand_id: string;
 }
 
+
+export interface InventoryList {
+    seq: number;
+    iccid: string;
+    cobrand_id: string;
+    agent_code: string;
+    in_date: string;
+    out_date: string;
+    status: string;
+    order_id: string;
+    country_id: string;
+    package_id: string;
+    selling_price: number;
+    sim_type: string;
+}
+
+export interface InventoryUpdate {
+    out_date: string;
+    status: string;
+    order_id: string;
+    country_id: string;
+    package_id: string;
+    selling_price: number;
+}
+
 export interface OrderListType {
     Seq: number;
     OrderID: string;
@@ -94,16 +129,20 @@ export interface OrderListType {
     TotalCost: number;
 }
 
-export interface userList {
-    userSeq: number;
-    userName: string;
-    userID: string;
-    userPass: string;
-    userLevel: string;
-    userBlocked: string;
-    userFailed: number;
-    userLastLogin: string;
-  }
+ export interface userList {
+    seq: number;
+    user_name: string;
+    session_name: string;
+    password: string;
+    session_level: string;
+    blocked: string;
+    failed: number;
+    last_login_time: string;
+ }
+
+ export interface userResetPwd {
+    password: string;
+ }
 
   export interface partnerList {
     seq: number;
@@ -116,6 +155,7 @@ export interface userList {
     sms_internal_reply: string;
     payment_type: string;
   }
+
 
   export interface agentList {
     seq: number;
@@ -145,6 +185,12 @@ export interface userList {
     cobrand_id: string;
   }
 
+  export interface levelList {
+    seq: number;
+    level_id: string;
+    level_name: string;
+  }
+
 export  interface companyType{
     company_id: number;
     company_name: string;
@@ -153,3 +199,43 @@ export  interface companyType{
     company_email: string;
     company_logo: string;
 }  
+
+export interface orderList {
+    seq: number;
+    order_id: string;
+    order_date: string;
+    order_type: string;
+    order_status: string;
+    order_customer_name: string;
+    order_contact_phone: string;
+    order_contact_wa: string;
+    order_contact_email: string;
+    order_agent_code: string;
+    order_agent_name: string;
+    order_product: string;
+    order_country_code: string;
+    order_fup: string;
+    order_quota: string;
+    order_days: number;
+    order_ccid: string;
+    order_qty: number;
+    order_product_price: number;
+    order_product_total_price: number;
+}
+
+export interface orderEventList {
+    seq: number;
+    order_id: string;
+    event_name: string;
+    event_date: string;
+    username: string;
+}
+
+
+export interface invSummaryAgent {
+    cobrand_id: string;
+    agent_code: string;
+    sim_type: string;
+    status: string;
+    quantity: number;
+}

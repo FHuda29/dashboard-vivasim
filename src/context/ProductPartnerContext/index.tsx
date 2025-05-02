@@ -52,8 +52,16 @@ export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = (
 
     const addProduct = async (newProduct: PartnerProductList) => {
         try {
-            console.log("newProduct: ",newProduct);
-            console.log("json newProduct: ",JSON.stringify(newProduct));
+            const masterProduct = await axios.get(ApiConfig.apiUrl + 'products/package/'+newProduct.package_id);
+            console.log("master product: ",masterProduct.data);
+
+            //add partner product
+            newProduct.package_name = masterProduct.data.package_name;
+            newProduct.country = masterProduct.data.country;
+            newProduct.days = masterProduct.data.days;
+            newProduct.quota = masterProduct.data.quota;
+            newProduct.status = masterProduct.data.status;
+
             const response = await axios.post(ApiConfig.apiUrl + 'product/partner', newProduct);
             const addedProduct = response.data;
             setProducts((prevProduct) => [...prevProduct, addedProduct]);

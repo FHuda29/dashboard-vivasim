@@ -20,7 +20,12 @@ import {
   Stack,
   TextField,
   InputAdornment,
-  Button
+  Button,
+  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle
 } from '@mui/material';
 
 import FirstPageIcon from '@mui/icons-material/FirstPage';
@@ -45,7 +50,8 @@ import { numberFormat, userList, formatDate } from "src/utils/Utils";
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
 import axios from 'axios';
-import { IconSearch, IconTrash } from '@tabler/icons-react';
+import { IconAccessible, IconBlockquote, IconKey, IconPackageOff, IconPassword, IconPasswordUser, IconRowRemove, IconSearch, IconSignLeft, IconTrash, IconUrgent } from '@tabler/icons-react';
+import { useNavigate } from 'react-router';
 
 const apiUrl = ApiConfig.apiUrl;
 
@@ -118,10 +124,33 @@ const BCrumb = [
 ];
 
 const UserList = () => {
+    const router = useNavigate();
+    const [userLevel, setUserLevel] = React.useState('');
+    const [userSession, setUserSession] = React.useState('');
     useEffect(() => {
-        //load user list
-        fetchUserList();
+        const data_success_login = localStorage.getItem('data_success_login');
+        
+        if (data_success_login) {
+          const parsedData = JSON.parse(data_success_login);
+          console.log('user_name:', parsedData.user_name);
+          console.log('session_name:', parsedData.session_name);
+          console.log('session_level:', parsedData.session_level);
+          console.log('last_login_time:', parsedData.last_login_time);
+          console.log('blocked:', parsedData.blocked);
 
+          setUserLevel(parsedData.session_level);
+          if(parsedData.session_level.toLowerCase() === 'partner'){
+            const user_login = parsedData.session_name.split('-')[0];
+            setUserSession(user_login);
+            fetchUserByCobrand(user_login);
+          }else{
+            //load user list
+            setUserSession(parsedData.session_name);
+            fetchUserList();
+          }
+        }else{
+          router('/auth/login');
+        }
     }, []);
 
   //get all product
@@ -138,15 +167,74 @@ const UserList = () => {
         });
   }
 
+  const fetchUserByCobrand = async (cobrand_id:string) => {
+    let end_point = apiUrl + "users/cobrand/"+cobrand_id;
+    axios
+        .get(end_point)
+        .then((response) => {
+            //console.log(response);
+            setUsers(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  //search
+    const handleSearchFilter = (event: any) => {
+        console.log(event.target.value);
+        setSearchTerm(event.target.value);
+        
+        const strtValue = event.target.value;
+        if(strtValue.length !== 0){
+            let end_point = apiUrl + "users/search?param="+strtValue;
+            axios
+                .get(end_point)
+                .then((response) => {
+                  setUsers(response.data);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }else{
+          //fetchUserList();
+          if(userLevel.toLowerCase() === 'partner'){
+            fetchUserByCobrand(userSession);
+          }else{
+            //load product
+            fetchUserList();
+          }
+        }
+  }
+
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectAll, setSelectAll] = React.useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const [openBlockDialog, setOpenBlockDialog] = React.useState(false);
+  const [openUnBlockDialog, setOpenUnBlockDialog] = React.useState(false);
+  const [seqID, setSeqID] = React.useState(0);
+  const [selectedUser, setSelectedUser] = React.useState('');
 
-  const handleDelete = () => {
-    setOpenDeleteDialog(true);
+  const handleBlock = (user:string, seq: any) => {
+    setSelectedUser(user);
+    setSeqID(seq);
+    setOpenBlockDialog(true);
   };
 
-  //row product
+  const handleCloseBlockDialog = () => {
+    setOpenBlockDialog(false);
+  };
+
+  const handleUnBlock = (user:string, seq: any) => {
+    setSelectedUser(user);
+    setSeqID(seq);
+    setOpenUnBlockDialog(true);
+  };
+
+  const handleCloseUnBlockDialog = () => {
+    setOpenUnBlockDialog(false);
+  };
+
+  //row users
   const [users, setUsers] = React.useState([]);
   const rows: userList[] = users;
 
@@ -166,6 +254,34 @@ const UserList = () => {
     setPage(0);
   };
 
+  const handleConfirmBlock = async () => {
+    const blockData = {
+      blocked: 'Y'
+    }
+
+    try {
+        await axios.put(apiUrl + 'users/block/'+seqID,blockData);
+        setOpenBlockDialog(false);
+        fetchUserList();
+    } catch (error) {
+        console.error('Error block users:', error);
+    }
+  };
+
+  const handleConfirmUnBlock = async () => {
+    const blockData = {
+      blocked: 'N'
+    }
+
+    try {
+        await axios.put(apiUrl + 'users/block/'+seqID,blockData);
+        setOpenUnBlockDialog(false);
+        fetchUserList();
+    } catch (error) {
+        console.error('Error unblock users:', error);
+    }
+  };
+
   return (
     <PageContainer title="Users" description="this is users page">
       {/* breadcrumb */}
@@ -181,40 +297,29 @@ const UserList = () => {
                     spacing={{ xs: 1, sm: 2, md: 4 }}
                 >
                     <TextField
-                    id="search"
-                    type="text"
-                    size="small"
-                    variant="outlined"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    InputProps={{
+                      id="search"
+                      type="text"
+                      size="small"
+                      variant="outlined"                    
+                      value={searchTerm}
+                      onChange={handleSearchFilter}
+                      InputProps={{
                         endAdornment: (
                         <InputAdornment position="end">
-                            <IconSearch size={"16"} />
+                          <IconSearch size={"16"} />
                         </InputAdornment>
-                        ),
-                    }}
+                      ),
+                      }}
                     />
                     <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to="/apps/user/create"
-                    >
-                        Add User
-                    </Button>
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          component={Link}
+                          to="/apps/user/create"
+                      >
+                          Add User
+                      </Button>
                     </Box>
                 </Stack>
             </Box>
@@ -228,22 +333,25 @@ const UserList = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <Typography variant="h6">User Name</Typography>
+                    <Typography variant="subtitle2">User Name</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Partner/Agent ID</Typography>
+                    <Typography variant="subtitle2">Partner/Agent ID</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Level</Typography>
+                    <Typography variant="subtitle2">Level</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Blocked</Typography>
+                    <Typography variant="subtitle2">Blocked</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Failed</Typography>
+                    <Typography variant="subtitle2">Failed</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="h6">Last Login</Typography>
+                    <Typography variant="subtitle2">Last Login</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Action</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -254,38 +362,64 @@ const UserList = () => {
                 ).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography variant="subtitle2">{row.userName}</Typography>
+                      <Typography variant="caption">{row.user_name}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.userID}
+                      <Typography variant="caption">
+                        {row.session_name}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                        {row.userLevel}
+                      <Typography variant="caption">
+                        {row.session_level}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      {row.userBlocked}
+                      <Typography variant="caption">
+                      {row.blocked}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography color="textSecondary" variant="h6" fontWeight="400">
-                      {row.userFailed}
+                      <Typography variant="caption">
+                      {row.failed}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="subtitle2">{formatDate(row.userLastLogin)}</Typography>
+                      <Typography variant="caption">{formatDate(row.last_login_time)}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="Reset Password">
+                        <IconButton 
+                          color="success" 
+                          component={Link}
+                          to={`/apps/user/change-password/${row.seq}`}>
+                        <IconKey width={22} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Block">
+                        <IconButton 
+                          color="error"
+                          onClick={() => handleBlock(row.user_name, row.seq)}
+                        >
+                          <IconRowRemove width={22} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Unblock">
+                        <IconButton 
+                          color="info"
+                          onClick={() => handleUnBlock(row.user_name, row.seq)}
+                        >
+                          <IconAccessible width={22} />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={6} />
+                    <TableCell colSpan={7} />
                   </TableRow>
                 )}
               </TableBody>
@@ -293,7 +427,7 @@ const UserList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={6}
+                    colSpan={7}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
@@ -310,6 +444,42 @@ const UserList = () => {
           </TableContainer>
         </BlankCard>
       </ParentCard>
+      <Dialog open={openBlockDialog} onClose={handleCloseBlockDialog}>
+        <DialogTitle>Confirm Block</DialogTitle>
+          <DialogContent>
+            Are you sure you want to block selected username "{selectedUser}" ?
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseBlockDialog}>
+              Cancel
+            </Button>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={handleConfirmBlock}
+            >
+              Block
+            </Button>
+          </DialogActions>
+      </Dialog>
+      <Dialog open={openUnBlockDialog} onClose={handleCloseUnBlockDialog}>
+        <DialogTitle>Confirm Block</DialogTitle>
+          <DialogContent>
+            Are you sure you want to unblock selected username "{selectedUser}" ?
+          </DialogContent>
+          <DialogActions>
+            <Button variant="contained" onClick={handleCloseUnBlockDialog}>
+              Cancel
+            </Button>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={handleConfirmUnBlock}
+            >
+              Unblock
+            </Button>
+          </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 };

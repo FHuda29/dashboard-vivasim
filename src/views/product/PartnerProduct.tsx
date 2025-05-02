@@ -117,15 +117,40 @@ const BCrumb = [
 ];
 
 const PartnerProduct = () => {
-    const navigate = useNavigate();
-    useEffect(() => {
-        //load product
-        fetchProductMaster();
+    const router = useNavigate();
+    const [userLevel, setUserLevel] = React.useState('');
+    const [userSession, setUserSession] = React.useState('');
 
+    useEffect(() => {
+        const data_success_login = localStorage.getItem('data_success_login');
+        
+        if (data_success_login) {
+          const parsedData = JSON.parse(data_success_login);
+          console.log('user_name:', parsedData.user_name);
+          console.log('session_name:', parsedData.session_name);
+          console.log('session_level:', parsedData.session_level);
+          console.log('last_login_time:', parsedData.last_login_time);
+          console.log('blocked:', parsedData.blocked);
+
+          setUserLevel(parsedData.session_level);
+          
+          if(parsedData.session_level.toLowerCase() === 'partner'){
+            const user_login = parsedData.session_name.split('-')[0];
+            setUserSession(user_login);
+            fetchProductCobrand(user_login);
+          }else{
+            //load product
+            setUserSession(parsedData.session_name);
+            fetchProductAllPartner();
+          }
+        }else{
+          router('/auth/login');
+        }
+        
     }, []);
 
   //get all product
-  const fetchProductMaster = async () => {
+  const fetchProductAllPartner = async () => {
     let end_point = apiUrl + "product/partner";
     axios
         .get(end_point)
@@ -138,6 +163,20 @@ const PartnerProduct = () => {
         });
   }
 
+  const fetchProductCobrand = async (cobrand_id:string) => {
+    let end_point = apiUrl + "product/partner/cobrand/"+cobrand_id;
+    axios
+        .get(end_point)
+        .then((response) => {
+            //console.log(response);
+            setProductPartner(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  
   const [searchTerm, setSearchTerm] = React.useState("");
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [seqID, setSeqID] = React.useState(0);
@@ -179,7 +218,15 @@ const PartnerProduct = () => {
                 console.log(error);
             });
     }else{
-        fetchProductMaster();
+      if(userLevel.toLowerCase() === 'partner'){
+        console.log("masuk 1",userLevel);
+        fetchProductCobrand(userSession);
+      }else{
+        //load product
+        console.log("masuk 2",userLevel);
+        fetchProductAllPartner();
+      }
+      //fetchProductAllPartner();
     }
   }
 
@@ -207,7 +254,13 @@ const PartnerProduct = () => {
     try {
         await axios.delete(apiUrl + 'product/partner/delete/'+seqID);
         setOpenDeleteDialog(false);
-        fetchProductMaster();
+        //fetchProductAllPartner();
+        if(userLevel.toLowerCase() === 'partner'){
+          fetchProductCobrand(userSession);
+        }else{
+          //load product
+          fetchProductAllPartner();
+        }
     } catch (error) {
         console.error('Error deleting products:', error);
     }
@@ -243,36 +296,26 @@ const PartnerProduct = () => {
                             ),
                         }}
                     />
-                    {/*
                     <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        New Product
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        Import Product
-                    </Button>
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          component={Link}
+                          to="/product/partner/create"
+                      >
+                          New Product
+                      </Button>
+                      {/*
+                      <Button
+                          variant="contained"
+                          color="secondary"
+                          component={Link}
+                          to="/apps/product/create"
+                      >
+                          Import Product
+                      </Button>
+                      */}
                     </Box>
-                    */}
                 </Stack>
             </Box>
           <TableContainer>

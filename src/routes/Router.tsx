@@ -97,9 +97,13 @@ const LineChart = Loadable(lazy(() => import('../views/charts/LineChart')));
 //Inventory
 const Inventory = Loadable(lazy(() => import('../views/inventory/ListInventory')));
 const MoveSIMCard = Loadable(lazy(() => import('../views/inventory/MoveSIMCard')));
+const SummaryInventory = Loadable(lazy(() => import('../views/inventory/SummaryInventory')));
 
 //order
 const OrderList = Loadable(lazy(() => import('../views/order/OrderList')));
+const OrderDetail = Loadable(lazy(() => import('../views/order/OrderDetail')));
+const OrderEvent = Loadable(lazy(() => import('../views/order/OrderEvent')));
+const CreateOrder = Loadable(lazy(() => import('../views/apps/order/Create')));
 
 //product 
 const MasterProduct = Loadable(lazy(() => import('../views/product/MasterProduct')));
@@ -107,17 +111,24 @@ const ProductCreate = Loadable(lazy(() => import('../views/apps/product/Create')
 
 //product partner
 const PartnerProduct = Loadable(lazy(() => import('../views/product/PartnerProduct')));
+const ProductPartnerCreate = Loadable(lazy(() => import('../views/apps/productpartner/Create')));  
 const ProductPartnerEdit = Loadable(lazy(() => import('../views/apps/productpartner/Edit')));  
 
 //user
 const UserList = Loadable(lazy(() => import('../views/users/UserList')));
 const CreateUser = Loadable(lazy(() => import('../views/apps/user/Create')));
+const ChangePassword = Loadable(lazy(() => import('../views/apps/user/ChangePassword')));
+
+//user level
+const UserLevel = Loadable(lazy(() => import('../views/users/UserLevel')));
 
 //partner
 const PartnerList = Loadable(lazy(() => import('../views/partners/PartnerList')));
+const CreatePartner = Loadable(lazy(() => import('../views/apps/partner/Create')));
 
 //agent
 const AgentList = Loadable(lazy(() => import('../views/agents/AgentList')));
+const CreateAgent = Loadable(lazy(() => import('../views/apps/agent/Create')));
 
 // tables
 const BasicTable = Loadable(lazy(() => import('../views/tables/BasicTable')));
@@ -168,6 +179,8 @@ const WidgetCharts = Loadable(lazy(() => import('../views/widgets/charts/WidgetC
 
 // authentication
 const Login = Loadable(lazy(() => import('../views/authentication/auth1/Login')));
+const Logout = Loadable(lazy(() => import('../views/logout/Logout')));
+
 const Login2 = Loadable(lazy(() => import('../views/authentication/auth2/Login2')));
 const Register = Loadable(lazy(() => import('../views/authentication/auth1/Register')));
 const Register2 = Loadable(lazy(() => import('../views/authentication/auth2/Register2')));
@@ -204,15 +217,24 @@ const Router = [
       { path: '/dashboard', exact: true, element: <ModernDash /> },
       { path: '/inventory/list', exact: true, element: <Inventory /> },
       { path: '/inventory/movesim', exact: true, element: <MoveSIMCard /> },
+      { path: '/inventory/summary', exact: true, element: <SummaryInventory /> },
       { path: '/order/list', exact: true, element: <OrderList /> },
+      { path: '/order/detail/:order_id', exact: true, element: <OrderDetail /> },
+      { path: '/order/history/:order_id', exact: true, element: <OrderEvent /> },
+      { path: '/order/create', exact: true, element: <CreateOrder /> },
       { path: '/product/master', exact: true, element: <MasterProduct /> },
       { path: '/product/partner', exact: true, element: <PartnerProduct /> },
       { path: '/apps/product/create', element: <ProductCreate /> },
+      { path: '/product/partner/create', element: <ProductPartnerCreate /> },
       { path: '/product/partner/edit/:seq', element: <ProductPartnerEdit /> },
       { path: '/user/list', exact: true, element: <UserList /> },
       { path: '/apps/user/create', element: <CreateUser /> },
+      { path: '/apps/user/change-password/:seq', element: <ChangePassword /> },
+      { path: '/user/level', exact: true, element: <UserLevel /> },
       { path: '/partner/list', exact: true, element: <PartnerList /> },
+      { path: '/apps/partner/create', element: <CreatePartner /> },
       { path: '/agent/list', exact: true, element: <AgentList /> },
+      { path: '/apps/agent/create', element: <CreateAgent /> },
       { path: '/dashboards/ecommerce', exact: true, element: <EcommerceDash /> },
       { path: '/apps/contacts', element: <Contacts /> },
       // { path: '/apps/blog/posts', element: <Blog /> },
@@ -320,6 +342,7 @@ const Router = [
     children: [
       { path: '/auth/404', element: <Error /> },
       { path: '/auth/login', element: <Login /> },
+      { path: '/auth/logout', element: <Logout /> },
       { path: '/auth/login2', element: <Login2 /> },
       { path: '/auth/register', element: <Register /> },
       { path: '/auth/register2', element: <Register2 /> },

@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -29,12 +28,21 @@ import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from 'src/components/shared/BlankCard';
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import { numberFormat, OrderListType, formatDate } from "src/utils/Utils";
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react';
+import { numberFormat, orderList, formatDate } from "src/utils/Utils";
+
+//api
+import ApiConfig  from "src/constants/apiConstants";
+import { useEffect } from 'react';
+import axios from 'axios';
+import { IconSearch, IconTrash } from '@tabler/icons-react';
+import { useNavigate } from 'react-router';
+
+const apiUrl = ApiConfig.apiUrl;
 
 interface TablePaginationActionsProps {
   count: number;
@@ -104,29 +112,83 @@ const BCrumb = [
 ];
 
 const OrderList = () => {
+    const router = useNavigate();
+    const [userLevel, setUserLevel] = React.useState('');
+    const [userSession, setUserSession] = React.useState('');
+
+    useEffect(() => {
+        const data_success_login = localStorage.getItem('data_success_login');
+        if (data_success_login) {
+            const parsedData = JSON.parse(data_success_login);
+            console.log('user_name:', parsedData.user_name);
+            console.log('session_name:', parsedData.session_name);
+            console.log('session_level:', parsedData.session_level);
+            console.log('last_login_time:', parsedData.last_login_time);
+            console.log('blocked:', parsedData.blocked);
+            
+            setUserLevel(parsedData.session_level);
+            setUserSession(parsedData.session_name);
+
+            
+
+            if(parsedData.session_level.toLowerCase() === 'partner'){
+                const user_login = parsedData.session_name.split('-')[0];
+                fetcPartnerhOrderList(user_login);
+            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+                fetchAgentOrderList(parsedData.session_name);
+            }else{
+                fetchOrderListAll();
+            }
+        }else{
+            router('/auth/login');
+        }
+    }, []);
 
     //order list
-    //const [orderList, setOrderList] = React.useState([]);
-    const orderList = [
-        {
-            Seq: 1,
-            OrderID: "GRM500110",
-            OrderDate: "09 Apr 2025",
-            Type: "SIM",
-            Status: 3,
-            CustomerName: "YASMINE - 2 PCS SIN + MALAYSIA + THAI",
-            ContactPhone: "08194141495",
-            ContactWA: "",
-            Email: "",
-            AgentCode: "GRM-TIA",
-            AgentName: "TIA FINANCE HO",
-            Product: "SIM_SG_MY_TH_7_2000",
-            Qty: 1,
-            TotalOrder: 270000,
-            TotalCost: 206800
-        },
-    ]
-    const rows: OrderListType[] = orderList;
+    const fetchAgentOrderList = async (agent_code:string) => {
+        let end_point = apiUrl + "orders/agent/"+agent_code;
+        axios
+            .get(end_point)
+            .then((response) => {
+                //console.log(response);
+                setOrderList(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+    //agent_code
+    const fetchOrderListAll = async () => {
+        let end_point = apiUrl + "orders";
+        axios
+            .get(end_point)
+            .then((response) => {
+                //console.log(response);
+                setOrderList(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
+    const fetcPartnerhOrderList = async (agent_code:string) => {
+        let end_point = apiUrl + "orders/?agent_code="+agent_code;
+        axios
+            .get(end_point)
+            .then((response) => {
+                //console.log(response);
+                setOrderList(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
+    //const [orderList, setOrderList] = React.useState([]); 
+    const [orderList, setOrderList] = React.useState([]);
+    const rows: orderList[] = orderList;
+
+    //const rows: OrderListType[] = orderList;
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     
@@ -147,6 +209,14 @@ const OrderList = () => {
         //setOpenDeleteDialog(true);
         console.log('move');
     };
+
+    const handleDetail = (order_id:string) => {
+        router('/order/detail/'+order_id);
+    }
+    
+    const handleHistory = (order_id:string) => {
+        router('/order/history/'+order_id);
+    }
 
     return (
         <PageContainer title="Order" description="this is order page">
@@ -312,44 +382,46 @@ const OrderList = () => {
                                         <Tooltip title="Detail">
                                             <IconButton
                                                 color="success"
+                                                onClick={() => handleDetail(row.order_id)}
                                             >
                                                 <IconEye width={22} />
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip title="History">
                                             <IconButton
-                                                color="primary"                                                
+                                                color="primary" 
+                                                onClick={() => handleHistory(row.order_id)}                                               
                                             >
                                                 <IconHistory width={22} />
                                             </IconButton>
                                         </Tooltip>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="subtitle2">{row.Seq}</Typography>
+                                        <Typography variant="subtitle2">{index+1}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.OrderID}
+                                            {row.order_id}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.OrderDate}
+                                            {formatDate(row.order_date)}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.Type}    
+                                            {row.order_type}    
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                           <Chip
                                             color={
-                                              row.Status == 1
+                                              row.order_status === 'Paid'
                                                 ? 'success'
-                                                : row.Status == 0
+                                                : row.order_status === 'New'
                                                   ? 'warning'
-                                                  : row.Status == 2
+                                                  : row.order_status === 'Cancel'
                                                     ? 'error'
                                                     : 'secondary'
                                             }
@@ -357,38 +429,38 @@ const OrderList = () => {
                                               borderRadius: '6px',
                                             }}
                                             size="small"
-                                            label={row.Status == 1 ? 'Paid' : row.Status == 2 ? 'Closed' : 'Pending'}
+                                            label={row.order_status}
                                           />
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.CustomerName}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_customer_name}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.ContactPhone.length > 0 ? row.ContactPhone : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_phone.length > 0 ? row.order_contact_phone : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.ContactWA.length > 0 ? row.ContactWA : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_wa.length > 0 ? row.order_contact_wa : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.Email.length > 0 ? row.Email : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_email.length > 0 ? row.order_contact_email : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.AgentCode}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_agent_code}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.AgentName}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_agent_name}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.Product}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_product}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.Qty)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_qty)}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.TotalOrder)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_product_price)}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.TotalCost)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_product_total_price)}</Typography>
                                     </TableCell>
                                 </TableRow>
                                 ))}

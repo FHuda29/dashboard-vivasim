@@ -302,13 +302,13 @@ const Menuitems: MenuitemsType[] = [
     id: uniqueId(),
     title: 'Reporting',
     icon: IconFileCheck,
-    href: '/apps/invoice/list',
+    href: '/inventory/summary',
     children: [
       {
         id: uniqueId(),
         title: 'Inventory Summary',
         icon: IconPoint,
-        href: '/apps/invoice/list',
+        href: '/inventory/summary',
       },
       /*
       {
@@ -377,7 +377,7 @@ const Menuitems: MenuitemsType[] = [
         id: uniqueId(),
         title: 'Role/Level User',
         icon: IconPoint,
-        href: '/widgets/charts',
+        href: '/user/level',
       },
     ],
   },

@@ -1,0 +1,1 @@
+import{f as e}from"./index-CFaCQM0R.js";const a=()=>e(new Date,"yyyyMMddhhmmss"),n=t=>t!=null?t.toString().replace(/\B(?=(\d{3})+(?!\d))/g,","):t=0,d=t=>{const r=new Date(t);return e(r,"dd MMM yyyy, hh:mm:ss")},o=()=>e(new Date,"yyyy-MM-dd hh:mm:ss");export{o as c,d as f,a as g,n};

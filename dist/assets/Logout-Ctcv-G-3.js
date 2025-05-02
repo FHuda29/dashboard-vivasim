@@ -1,0 +1,1 @@
+import{y as s,r as a,j as t}from"./index-q1gJB5H0.js";const r=()=>{const e=s();return a.useEffect(()=>{localStorage.removeItem("data_success_login"),setTimeout(()=>{e("/auth/login")},1e3)},[e]),t.jsx("div",{className:"flex items-center justify-center h-screen",children:t.jsx("p",{className:"text-lg font-semibold",children:"Logging out..."})})};export{r as default};

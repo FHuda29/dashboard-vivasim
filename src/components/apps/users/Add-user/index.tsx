@@ -19,6 +19,7 @@ import {
   Stack,
   Divider,
   Grid2 as Grid,
+  InputAdornment,
 } from '@mui/material';
 import { useNavigate } from 'react-router';
 //import { format, isValid } from 'date-fns';
@@ -26,34 +27,88 @@ import { useNavigate } from 'react-router';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 //import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
+import axios from 'axios';
+import ApiConfig  from "src/constants/apiConstants";
+import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
+import { VisibilityOff, Visibility } from '@mui/icons-material';
+const apiUrl = ApiConfig.apiUrl;
 
 const CreateUser = () => {
+  const [partners, setPartners] = React.useState([]);
+  const [agents, setAgents] = React.useState([]);
+
+  const [levels, setLevels] = React.useState([]);
+  const [userLevel, setUserLevel] = React.useState('');
+  const [userSession, setUserSession] = React.useState('');
+
   const { addUser, users } = useContext(UserContext);
   const [showAlert, setShowAlert] = useState(false);
   const router = useNavigate();
   const [formData, setFormData] = useState({
-    userSeq: 0,
-    userName: '',
-    userID: '',
-    userPass: '',
-    userLevel: '',
-    userBlocked: '',
-    userFailed: 0
+    seq: 0,
+    user_name: '',
+    session_name: '',
+    password: '',
+    session_level: 'partner',
+    blocked: 'N',
+    failed: 0
   });
 
+  //show hide password
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   useEffect(() => {
+    
+    const data_success_login = localStorage.getItem('data_success_login');
+    if (data_success_login) {
+        const parsedData = JSON.parse(data_success_login);
+        //console.log('user_name:', parsedData.user_name);
+        console.log('session_name:', parsedData.session_name);
+        console.log('session_level:', parsedData.session_level);
+        //console.log('last_login_time:', parsedData.last_login_time);
+        //console.log('blocked:', parsedData.blocked);
+
+        setUserLevel(parsedData.session_level);
+        setUserSession(parsedData.session_name);
+        setFormData((prevData: any) => ({
+          ...prevData,
+          session_name: parsedData.session_name
+        }));
+
+        if(parsedData.session_level.toLowerCase() === 'partner'){
+          fetchAgentListCobrand(parsedData.session_name);
+          fetchLevelByCode('AGENT');
+        }else{
+          //list partner
+          fetchPartnerList();
+          //list levels
+          fetchLevelList();
+        }
+    }
+    
+    
+
     if (users.length > 0) {
-      const lastId = users[users.length - 1].userSeq;
+      const lastId = users[users.length - 1].seq;
       setFormData((prevData: any) => ({
         ...prevData,
-        userSeq: lastId + 1,
+        seq: lastId + 1,
       }));
     } else {
       setFormData((prevData: any) => ({
         ...prevData,
-        userSeq: 1,
+        seq: 1,
       }));
     }
+    
   }, [users]);
 
   
@@ -73,13 +128,13 @@ const CreateUser = () => {
     try {
       await addUser(formData);
       setFormData({
-        userSeq: 0,
-        userName: '',
-        userID: '',
-        userPass: '',
-        userLevel: '',
-        userBlocked: '',
-        userFailed: 0
+        seq: 0,
+        user_name: '',
+        session_name: '',
+        password: '',
+        session_level: 'PARTNER',
+        blocked: 'N',
+        failed: 0
       });
       setShowAlert(true);
       setTimeout(() => {
@@ -91,6 +146,58 @@ const CreateUser = () => {
       console.error('Error adding user:', error);
     }
   };
+
+  
+  const fetchPartnerList = async () => {
+      let end_point = apiUrl + "partners";
+      axios
+          .get(end_point)
+          .then((response) => {
+              //console.log(response);
+              setPartners(response.data);
+          })
+          .catch((error) => {
+              console.log(error);
+          });
+  }
+
+  const fetchAgentListCobrand = async (cobrand_id:string) => {
+    let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+    axios
+        .get(end_point)
+        .then((response) => {
+          setAgents(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  const fetchLevelList = async () => {
+    let end_point = apiUrl + "levels";
+    axios
+        .get(end_point)
+        .then((response) => {
+            //console.log(response);
+            setLevels(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  const fetchLevelByCode = async (level_code:string) => {
+    let end_point = apiUrl + "levels/code/"+level_code;
+    axios
+        .get(end_point)
+        .then((response) => {
+            //console.log(response);
+            setLevels(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
 
   //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
   //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
@@ -104,7 +211,7 @@ const CreateUser = () => {
           justifyContent="space-between"
           mb={3}
         >
-          <Typography variant="h5"># {formData.userSeq}</Typography>
+          <Typography variant="h5"># {formData.seq}</Typography>
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
@@ -155,45 +262,21 @@ const CreateUser = () => {
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel htmlFor="userName">User Name</CustomFormLabel>
             <CustomTextField
-              id="userName"
-              name="userName"
+              id="user_name"
+              name="user_name"
               onChange={handleChange}
-              value={formData.userName}
+              value={formData.user_name}
               fullWidth
             />
           </Grid>
           <Grid
             size={{
               xs: 12,
-              sm: 6
-            }}>
-            <CustomFormLabel
-              htmlFor="userID"
-              sx={{
-                mt: {
-                  xs: 0,
-                  sm: 3,
-                },
-              }}
-            >
-              Partner/Agent ID
-            </CustomFormLabel>
-            <CustomTextField
-              id="userID"
-              name="userID"
-              value={formData.userID}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel
               htmlFor="userPass"
@@ -204,17 +287,96 @@ const CreateUser = () => {
               User Password
             </CustomFormLabel>
             <CustomTextField
-              name="userPass"
-              type="password"
-              value={formData.userPass}
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
               onChange={handleChange}
               fullWidth
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Grid>
+          {userLevel.toLowerCase() === 'partner' ? (
+            <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
+            <CustomFormLabel
+                htmlFor="userID"
+                sx={{
+                  mt: {
+                    xs: 0,
+                    sm: 3,
+                  },
+                }}
+              >
+                Agent ID
+              </CustomFormLabel>
+              <CustomSelect
+                id="session_name"
+                name="session_name"
+                value={formData.session_name}
+                onChange={handleChange}
+                fullWidth
+              >
+                {agents.map((agent: any) => (
+                  <MenuItem key={agent.seq} value={agent.agent_code}>
+                    {agent.agent_code}
+                  </MenuItem>
+                ))}
+            </CustomSelect>
+          </Grid>
+          ):(
+            <Grid
+              size={{
+                xs: 12,
+                sm: 12
+              }}>
+              <CustomFormLabel
+                  htmlFor="userID"
+                  sx={{
+                    mt: {
+                      xs: 0,
+                      sm: 3,
+                    },
+                  }}
+                >
+                  Partner
+                </CustomFormLabel>
+                <CustomSelect
+                  id="session_name"
+                  name="session_name"
+                  value={formData.session_name}
+                  onChange={handleChange}
+                  fullWidth
+                >
+                  {partners.map((partner: any) => (
+                    <MenuItem key={partner.seq} value={partner.cobrand_id}>
+                      {partner.cobrand_id}
+                    </MenuItem>
+                  ))}
+              </CustomSelect>
+            </Grid>
+          )
+          }
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel
               htmlFor="userLevel"
@@ -224,17 +386,34 @@ const CreateUser = () => {
             >
               User Level
             </CustomFormLabel>
+            {/*
             <CustomTextField
-              name="userLevel"
-              value={formData.userLevel}
+              id="session_level"
+              name="session_level"
+              value={formData.session_level}
               onChange={handleChange}
               fullWidth
             />
+            */}
+            <CustomSelect
+              id="session_level"
+              name="session_level"
+              value={formData.session_level}
+              onChange={handleChange}
+              fullWidth
+            >
+              {levels.map((level: any) => (
+                <MenuItem key={level.seq} value={level.level_id}>
+                  {level.level_name}
+                </MenuItem>
+              ))}
+            </CustomSelect>
           </Grid>
+          {/*
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel
               htmlFor="userBlocked"
@@ -245,8 +424,9 @@ const CreateUser = () => {
               User Blocked
             </CustomFormLabel>
             <CustomTextField
-              name="userBlocked"
-              value={formData.userBlocked}
+              id="blocked"
+              name="blocked"
+              value={formData.blocked}
               onChange={handleChange}
               fullWidth
             />
@@ -254,7 +434,7 @@ const CreateUser = () => {
           <Grid
             size={{
               xs: 12,
-              sm: 6
+              sm: 12
             }}>
             <CustomFormLabel
               htmlFor="userFailed"
@@ -265,12 +445,14 @@ const CreateUser = () => {
               User Failed
             </CustomFormLabel>
             <CustomTextField
-              name="userFailed"
-              value={formData.userFailed}
+              id="failed"
+              name="failed"
+              value={formData.failed}
               onChange={handleChange}
               fullWidth
             />
           </Grid>
+          */}
         </Grid>
         
         {showAlert && (

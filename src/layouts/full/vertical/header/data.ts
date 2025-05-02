@@ -123,6 +123,15 @@ const profile: ProfileType[] = [
     title: 'My Profile',
     subtitle: 'Account Settings',
     icon: icon1,
+  }
+];
+/*
+const profile: ProfileType[] = [
+  {
+    href: '/user-profile',
+    title: 'My Profile',
+    subtitle: 'Account Settings',
+    icon: icon1,
   },
   {
     href: '/apps/email',
@@ -137,7 +146,7 @@ const profile: ProfileType[] = [
     icon: icon3,
   },
 ];
-
+*/
 // apps dropdown
 
 interface appsLinkType {

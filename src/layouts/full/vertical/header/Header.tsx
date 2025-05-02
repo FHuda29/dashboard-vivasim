@@ -65,7 +65,7 @@ const Header = () => {
         */}  
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Language />
+          {/*<Language />*/}
           {/* ------------------------------------------- */}
           {/* Ecommerce Dropdown */}
           {/* ------------------------------------------- */}
@@ -80,7 +80,7 @@ const Header = () => {
               <IconSun size="21" stroke="1.5" onClick={() => dispatch(setDarkMode('light'))} />
             )}
           </IconButton>
-          <Notifications />
+          {/*<Notifications />*/}
           {/* ------------------------------------------- */}
           {/* Toggle Right Sidebar for mobile */}
           {/* ------------------------------------------- */}

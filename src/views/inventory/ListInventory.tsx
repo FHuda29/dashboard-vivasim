@@ -36,14 +36,13 @@ import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
 import { Link } from 'react-router';
 
-import { numberFormat, ProductList, formatDate } from "src/utils/Utils";
+import { numberFormat, InventoryList, formatDate } from "src/utils/Utils";
 //api
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
 import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
-import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
-import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
+import { useNavigate } from 'react-router';
 
 const apiUrl = ApiConfig.apiUrl;
 
@@ -116,37 +115,81 @@ const BCrumb = [
 ];
 
 const Inventory = () => {
-    useEffect(() => {
-        //load product
-        fetchProductMaster();
+  const router = useNavigate();
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectAll, setSelectAll] = React.useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
 
+    useEffect(() => {
+        const data_success_login = localStorage.getItem('data_success_login');
+        if (data_success_login) {
+          const parsedData = JSON.parse(data_success_login);
+          console.log('user_name:', parsedData.user_name);
+          console.log('session_name:', parsedData.session_name);
+          console.log('session_level:', parsedData.session_level);
+          console.log('last_login_time:', parsedData.last_login_time);
+          console.log('blocked:', parsedData.blocked);
+
+          if(parsedData.session_level.toLowerCase() === 'partner'){
+            const user_login = parsedData.session_name.split('-')[0];
+            fetchInventoryByUser(user_login);
+            //fetchInventoryByUser((parsedData.session_name));
+          }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+            fetchInventoryByAgent((parsedData.session_name));  
+          }else{
+            //load inventory
+            fetchInventorylist();
+          }
+        }else{
+          router('/auth/login');
+        }
     }, []);
 
   //get all product
-  const fetchProductMaster = async () => {
-    let end_point = apiUrl + "products";
+  const fetchInventorylist = async () => {
+    let end_point = apiUrl + "inventory";
     axios
         .get(end_point)
         .then((response) => {
             //console.log(response);
-            setProductMaster(response.data);
+            setProductInventory(response.data);
         })
         .catch((error) => {
             console.log(error);
         });
   }
 
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectAll, setSelectAll] = React.useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const fetchInventoryByUser = async (user_login:string) => {
+    let end_point = apiUrl + "inventory/cobrand/"+user_login;
+    axios
+        .get(end_point)
+        .then((response) => {
+            setProductInventory(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
+
+  const fetchInventoryByAgent = async (user_login:string) => {
+    let end_point = apiUrl + "inventory/agent/"+user_login;
+    axios
+        .get(end_point)
+        .then((response) => {
+            setProductInventory(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+  }
 
   const handleDelete = () => {
     setOpenDeleteDialog(true);
   };
 
-  //row product
-  const [productMaster, setProductMaster] = React.useState([]);
-  const rows: ProductList[] = productMaster;
+  //row inventory
+  const [productInventory, setProductInventory] = React.useState([]);
+  const rows: InventoryList[] = productInventory;
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -164,6 +207,27 @@ const Inventory = () => {
     setPage(0);
   };
 
+  //search
+  const handleSearchFilter = (event: any) => {
+        console.log(event.target.value);
+        setSearchTerm(event.target.value);
+        
+        const strtValue = event.target.value;
+        if(strtValue.length !== 0){
+            let end_point = apiUrl + "inventory/search?param="+strtValue;
+            axios
+                .get(end_point)
+                .then((response) => {
+                  setProductInventory(response.data);
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }else{
+          fetchInventorylist();
+        }
+  }
+  
   return (
     <PageContainer title="Inventory" description="this is inventory page">
       {/* breadcrumb */}
@@ -171,7 +235,6 @@ const Inventory = () => {
       {/* end breadcrumb */}
       <ParentCard title="Inventory List">
         <BlankCard>
-            {/*
             <Box>
                 <Stack
                     mt={3}
@@ -180,52 +243,54 @@ const Inventory = () => {
                     spacing={{ xs: 1, sm: 2, md: 4 }}
                 >
                     <TextField
-                    id="search"
-                    type="text"
-                    size="small"
-                    variant="outlined"
-                    placeholder="Search"
-                    value={searchTerm}
-                    onChange={(e: any) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        endAdornment: (
-                        <InputAdornment position="end">
-                            <IconSearch size={"16"} />
-                        </InputAdornment>
-                        ),
-                    }}
-                    />
-                    <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
+                        id="search"
+                        type="text"
+                        size="small"
                         variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        New Product
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        component={Link}
-                        to="/apps/product/create"
-                    >
-                        Import Product
-                    </Button>
+                        placeholder="Search"
+                        value={searchTerm}
+                        onChange={handleSearchFilter}
+                        InputProps={{
+                            endAdornment: (
+                            <InputAdornment position="end">
+                                <IconSearch size={"16"} />
+                            </InputAdornment>
+                            ),
+                        }}
+                    />
+                    {/*
+                    <Box display="flex" gap={1}>
+                      {selectAll && (
+                      <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={handleDelete}
+                          startIcon={<IconTrash width={18} />}
+                          >
+                          Delete All
+                          </Button>
+                      )}
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          component={Link}
+                          to="/apps/product/create"
+                      >
+                          New Product
+                      </Button>
+                      <Button
+                          variant="contained"
+                          color="secondary"
+                          component={Link}
+                          to="/apps/product/create"
+                      >
+                          Import Product
+                      </Button>
                     </Box>
+                    */}
                 </Stack>
             </Box>
-            */}
+            {/*
             <Box mt={2} mb={2}>
               <Grid size={{ xs: 12 }}>
                   <Grid container spacing={2}>
@@ -290,6 +355,7 @@ const Inventory = () => {
                   </Grid>
               </Grid>    
             </Box>
+            */}
           <TableContainer>
             <Table
               aria-label="custom pagination table"
@@ -300,25 +366,34 @@ const Inventory = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>
-                    <Typography variant="subtitle2">Product ID</Typography>
+                    <Typography variant="subtitle2">ICCID</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Product Name</Typography>
+                    <Typography variant="subtitle2">Sim Type</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Status</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Order ID</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="subtitle2">Country</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Days</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Quota</Typography>
-                  </TableCell>
-                  <TableCell>
                     <Typography variant="subtitle2">Selling Price</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Status</Typography>
+                    <Typography variant="subtitle2">In Date</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Out Date</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Partner</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="subtitle2">Agent</Typography>
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -329,32 +404,11 @@ const Inventory = () => {
                 ).map((row, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      <Typography variant="caption">{row.package_id}</Typography>
+                      <Typography variant="caption">{row.iccid}</Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">
-                        {row.package_name}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="caption">
-                        {row.country}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        {numberFormat(row.days)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        {numberFormat(row.quota)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        IDR {numberFormat(row.selling_price)}
+                        {row.sim_type}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -375,12 +429,47 @@ const Inventory = () => {
                         label={row.status}
                       />
                     </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.order_id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.country_id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        IDR {numberFormat(row.selling_price)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.in_date}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.out_date}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.cobrand_id}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        {row.agent_code}
+                      </Typography>
+                    </TableCell>
                   </TableRow>
                 ))}
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={7} />
+                    <TableCell colSpan={10} />
                   </TableRow>
                 )}
               </TableBody>
@@ -388,7 +477,7 @@ const Inventory = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={7}
+                    colSpan={10}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

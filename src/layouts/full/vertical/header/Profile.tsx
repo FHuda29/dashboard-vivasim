@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import {
   Box,
@@ -19,7 +19,41 @@ import { IconMail } from '@tabler/icons-react';
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 import unlimitedImg from 'src/assets/images/backgrounds/unlimited-bg.png';
 
+
 const Profile = () => {
+
+      const [userName,setUserName] = React.useState('');
+      const [userLevel, setUserLevel] = React.useState('');
+      const [userSession, setUserSession] = React.useState('');
+  
+      useEffect(() => {
+              const data_success_login = localStorage.getItem('data_success_login');
+              if (data_success_login) {
+                  const parsedData = JSON.parse(data_success_login);
+                  console.log('user_name:', parsedData.user_name);
+                  console.log('session_name:', parsedData.session_name);
+                  console.log('session_level:', parsedData.session_level);
+                  console.log('last_login_time:', parsedData.last_login_time);
+                  console.log('blocked:', parsedData.blocked);
+                  
+                  setUserName(parsedData.user_name);
+                  setUserLevel(parsedData.session_level);
+                  setUserSession(parsedData.session_name);
+      
+                  if(parsedData.session_level.toLowerCase() === 'partner'){
+                      const user_login = parsedData.session_name.split('-')[0];
+                  }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+                      
+                  }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
+                      
+                  }else{
+                      
+                  }
+              }else{
+                  //router('/auth/login');
+              }
+  }, []);
+
   const [anchorEl2, setAnchorEl2] = useState(null);
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
@@ -75,10 +109,18 @@ const Profile = () => {
           <Avatar src={ProfileImg} alt={ProfileImg} sx={{ width: 95, height: 95 }} />
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-              Mathew Anderson
+              {userName}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              Designer
+              {userLevel.toLowerCase() === 'partner' ? (
+                  <>Partner</>
+              ):(
+                userLevel.toLowerCase() === 'agent-manager' || userLevel.toLowerCase() === 'agent-admin' ? (
+                  <>Agent</>
+                ):(
+                  <>HO Admin</>
+                )
+              )}
             </Typography>
             <Typography
               variant="subtitle2"
@@ -88,7 +130,7 @@ const Profile = () => {
               gap={1}
             >
               <IconMail width={15} height={15} />
-              info@modernize.com
+              {userLevel}
             </Typography>
           </Box>
         </Stack>
@@ -148,6 +190,7 @@ const Profile = () => {
         <Box mt={2}>
           <Box bgcolor="primary.light" p={3} mb={3} overflow="hidden" position="relative">
             <Box display="flex" justifyContent="space-between">
+              {/*
               <Box>
                 <Typography variant="h5" mb={2}>
                   Unlimited <br />
@@ -157,10 +200,11 @@ const Profile = () => {
                   Upgrade
                 </Button>
               </Box>
+              */}
               <img src={unlimitedImg} alt="unlimited" className="signup-bg"></img>
             </Box>
           </Box>
-          <Button to="/auth/login" variant="outlined" color="primary" component={Link} fullWidth>
+          <Button to="/auth/logout" variant="outlined" color="primary" component={Link} fullWidth>
             Logout
           </Button>
         </Box>

@@ -1,10 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import React from 'react';
-import { Box, Grid2 as Grid } from '@mui/material';
+import React, { useEffect } from "react";
+import { Box, Grid2 as Grid, Typography } from '@mui/material';
 import PageContainer from 'src/components/container/PageContainer';
 
 import TopCards from 'src/components/dashboards/modern/TopCards';
+import WelcomeHome from 'src/components/dashboards/modern/Welcome';
 import RevenueUpdates from 'src/components/dashboards/modern/RevenueUpdates';
 import YearlyBreakup from 'src/components/dashboards/modern/YearlyBreakup';
 import MonthlyEarnings from 'src/components/dashboards/modern/MonthlyEarnings';
@@ -16,14 +17,58 @@ import SellingProducts from 'src/components/dashboards/modern/SellingProducts';
 import WeeklyStats from 'src/components/dashboards/modern/WeeklyStats';
 import TopPerformers from 'src/components/dashboards/modern/TopPerformers';
 import Welcome from 'src/layouts/full/shared/welcome/Welcome';
+import { useNavigate } from 'react-router';
 
 //api
 import ApiConfig  from "src/constants/apiConstants";
+import { ro } from "date-fns/locale";
 
 const Modern = () => {
+  const router = useNavigate();
+  const [userName,setUserName] = React.useState('');
+  const [userLevel, setUserLevel] = React.useState('');
+  const [userSession, setUserSession] = React.useState('');
+  const [isPartner,setIsPartner] = React.useState(false);
+  const [isAgent,setIsAgent] = React.useState(false);
+  const [titleDashboard, setTitleDashboard] = React.useState('');
 
-  //console.log('API URL:', ApiConfig.apiUrl);
-  //console.log('API Key:', ApiConfig.apiKey);
+  useEffect(() => {
+    //data_success_login
+    const data_success_login = localStorage.getItem('data_success_login');
+        if (data_success_login) {
+            const parsedData = JSON.parse(data_success_login);
+            console.log('user_name:', parsedData.user_name);
+            console.log('session_name:', parsedData.session_name);
+            console.log('session_level:', parsedData.session_level);
+            console.log('last_login_time:', parsedData.last_login_time);
+            console.log('blocked:', parsedData.blocked);
+            
+            setUserName(parsedData.user_name);
+            setUserLevel(parsedData.session_level);
+            setUserSession(parsedData.session_name);
+
+            if(parsedData.session_level.toLowerCase() === 'partner'){
+                setTitleDashboard('Partner');
+                const user_login = parsedData.session_name.split('-')[0];
+                setIsPartner(true);
+                setIsAgent(false);
+            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+                setTitleDashboard('Agent Manager');
+                setIsPartner(false);
+                setIsAgent(true);
+            }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
+                setTitleDashboard('Agent Admin');
+                setIsPartner(false);
+                setIsAgent(true);
+            }else{
+                setTitleDashboard('Head Office');
+                setIsPartner(false);
+                setIsAgent(false);
+            }
+        }else{
+            router('/auth/login');
+        }
+  }, []);
 
   return (
     (<PageContainer title="Main Dashboard" description="this is Main Dashboard page">
@@ -31,13 +76,49 @@ const Modern = () => {
         <Grid container spacing={3}>
           {/* column */}
           <Grid
+              size={{
+                xs: 12
+          }}>
+            <Typography variant="subtitle2" fontSize={20} fontWeight="600">Welcome to dashboard -  {titleDashboard}</Typography>
+          </Grid>
+          {isAgent ? (
+            <Grid
+              size={{
+                xs: 12,
+                lg: 12
+              }}>
+              <WelcomeHome />
+            </Grid>
+          ):(
+            <>
+            <Grid
+              size={{
+                xs: 12,
+                lg: 12
+              }}>
+              <TopCards />
+            </Grid>
+            <Grid
+              size={{
+                xs: 12,
+                lg: 12
+              }}>
+              <WelcomeHome />
+            </Grid>
+            </> 
+          )
+          }
+          {/*
+          <Grid
             size={{
               xs: 12,
               lg: 12
             }}>
             <TopCards />
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -45,7 +126,9 @@ const Modern = () => {
             }}>
             <RevenueUpdates />
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -70,7 +153,9 @@ const Modern = () => {
               </Grid>
             </Grid>
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -78,7 +163,9 @@ const Modern = () => {
             }}>
             <EmployeeSalary />
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -104,7 +191,9 @@ const Modern = () => {
               </Grid>
             </Grid>
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -112,7 +201,9 @@ const Modern = () => {
             }}>
             <SellingProducts />
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -120,7 +211,9 @@ const Modern = () => {
             }}>
             <WeeklyStats />
           </Grid>
+          */}
           {/* column */}
+          {/*
           <Grid
             size={{
               xs: 12,
@@ -128,6 +221,7 @@ const Modern = () => {
             }}>
             <TopPerformers />
           </Grid>
+          */}
         </Grid>
         {/* column */}
         <Welcome />
@@ -137,3 +231,5 @@ const Modern = () => {
 };
 
 export default Modern;
+
+
