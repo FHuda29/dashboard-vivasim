@@ -116,7 +116,7 @@ const MenuitemsPartner: MenuitemsType[] = [
     children: [
       {
         id: uniqueId(),
-        title: 'List User',
+        title: 'User Web Login',
         icon: IconPoint,
         href: '/user/list',
       }
