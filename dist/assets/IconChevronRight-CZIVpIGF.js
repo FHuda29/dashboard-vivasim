@@ -1,1 +1,0 @@
-import{c as e}from"./createReactComponent-3iThfHP-.js";var r=e("chevron-left","IconChevronLeft",[["path",{d:"M15 6l-6 6l6 6",key:"svg-0"}]]),t=e("chevron-right","IconChevronRight",[["path",{d:"M9 6l6 6l-6 6",key:"svg-0"}]]);export{t as I,r as a};

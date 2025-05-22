@@ -1,1 +1,0 @@
-import{b as a,j as t}from"./index-q1gJB5H0.js";import{C as e}from"./Card-bW_5XQOp.js";const p=({children:r})=>{const o=a(s=>s.customizer);return t.jsx(e,{sx:{display:"flex",p:0},elevation:o.isCardShadow?9:0,variant:o.isCardShadow?void 0:"outlined",children:r})};export{p as A};

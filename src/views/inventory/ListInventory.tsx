@@ -234,8 +234,7 @@ const Inventory = () => {
       <Breadcrumb title="Inventory" items={BCrumb} />
       {/* end breadcrumb */}
       <ParentCard title="Inventory List">
-        <BlankCard>
-            <Box>
+          <Box mb={2}>
                 <Stack
                     mt={3}
                     justifyContent="space-between"
@@ -356,143 +355,144 @@ const Inventory = () => {
               </Grid>    
             </Box>
             */}
-          <TableContainer>
-            <Table
-              aria-label="custom pagination table"
-              sx={{
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell>
-                    <Typography variant="subtitle2">ICCID</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Sim Type</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Status</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Order ID</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Country</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Selling Price</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">In Date</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Out Date</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Partner</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2">Agent</Typography>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(rowsPerPage > 0
-                  ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  : rows
-                ).map((row, index) => (
-                  <TableRow key={index}>
+          <BlankCard>  
+            <TableContainer>
+              <Table
+                aria-label="custom pagination table"
+                sx={{
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <TableHead>
+                  <TableRow>
                     <TableCell>
-                      <Typography variant="caption">{row.iccid}</Typography>
+                      <Typography variant="subtitle2">ICCID</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.sim_type}
-                      </Typography>
+                      <Typography variant="subtitle2">Sim Type</Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        color={
-                          row.status === 'Ready'
-                            ? 'success'
-                            : row.status === 'Open'
-                              ? 'warning'
-                              : row.status == 'Used'
-                                ? 'error'
-                                : 'secondary'
-                        }
-                        sx={{
-                          borderRadius: '6px',
-                        }}
-                        size="small"
-                        label={row.status}
-                      />
+                      <Typography variant="subtitle2">Status</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.order_id}
-                      </Typography>
+                      <Typography variant="subtitle2">Order ID</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.country_id}
-                      </Typography>
+                      <Typography variant="subtitle2">Country</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        IDR {numberFormat(row.selling_price)}
-                      </Typography>
+                      <Typography variant="subtitle2">Selling Price</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.in_date}
-                      </Typography>
+                      <Typography variant="subtitle2">In Date</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.out_date}
-                      </Typography>
+                      <Typography variant="subtitle2">Out Date</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.cobrand_id}
-                      </Typography>
+                      <Typography variant="subtitle2">Partner</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption">
-                        {row.agent_code}
-                      </Typography>
+                      <Typography variant="subtitle2">Agent</Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                </TableHead>
+                <TableBody>
+                  {(rowsPerPage > 0
+                    ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    : rows
+                  ).map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Typography variant="caption">{row.iccid}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.sim_type}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          color={
+                            row.status === 'Ready'
+                              ? 'success'
+                              : row.status === 'Open'
+                                ? 'warning'
+                                : row.status == 'Used'
+                                  ? 'error'
+                                  : 'secondary'
+                          }
+                          sx={{
+                            borderRadius: '6px',
+                          }}
+                          size="small"
+                          label={row.status}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.order_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.country_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          IDR {numberFormat(row.selling_price)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.in_date}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.out_date}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.cobrand_id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {row.agent_code}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
 
-                {emptyRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={10} />
+                  {emptyRows > 0 && (
+                    <TableRow style={{ height: 53 * emptyRows }}>
+                      <TableCell colSpan={10} />
+                    </TableRow>
+                  )}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TablePagination
+                      rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+                      colSpan={10}
+                      count={rows.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      SelectProps={{
+                        native: true,
+                      }}
+                      onPageChange={handleChangePage}
+                      onRowsPerPageChange={handleChangeRowsPerPage}
+                      ActionsComponent={TablePaginationActions}
+                    />
                   </TableRow>
-                )}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TablePagination
-                    rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={10}
-                    count={rows.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    SelectProps={{
-                      native: true,
-                    }}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    ActionsComponent={TablePaginationActions}
-                  />
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableContainer>
-        </BlankCard>
+                </TableFooter>
+              </Table>
+            </TableContainer>
+          </BlankCard>
       </ParentCard>
     </PageContainer>
   );

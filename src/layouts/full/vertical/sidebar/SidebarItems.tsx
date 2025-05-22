@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import Menuitems from './MenuItems';
 import MenuItemsPartner from './MenuItemsPartner';
 import MenuItemsAgent from './MenuItemsAgent';
+import MenuitemsCS from './MenuItemsCS';
 
 import { useLocation } from 'react-router';
 import { Box, List, useMediaQuery } from '@mui/material';
@@ -103,6 +104,35 @@ const SidebarItems = () => {
         }
       })}
     </List>
+      ):(levelUser.toLowerCase() === 'cs-web' ? (
+        <List sx={{ pt: 0 }} className="sidebarNav">   
+          {MenuitemsCS.map((item) => {
+            // {/********SubHeader**********/}
+            if (item.subheader) {
+              return <NavGroup item={item} hideMenu={hideMenu} key={item.subheader} />;
+              // {/********If Sub Menu**********/}
+              /* eslint no-else-return: "off" */
+            } else if (item.children) {
+              return (
+                <NavCollapse
+                  menu={item}
+                  pathDirect={pathDirect}
+                  hideMenu={hideMenu}
+                  pathWithoutLastPart={pathWithoutLastPart}
+                  level={1}
+                  key={item.id}
+                  onClick={() => dispatch(toggleMobileSidebar())}
+                />
+              );
+              // {/********If Sub No Menu**********/}
+            } else {
+              return (
+                <NavItem item={item} key={item.id} pathDirect={pathDirect} hideMenu={hideMenu}
+                onClick={() => dispatch(toggleMobileSidebar())} />
+              );
+            }
+          })}
+        </List>  
       ):(
         <List sx={{ pt: 0 }} className="sidebarNav">   
           {Menuitems.map((item) => {
@@ -132,6 +162,7 @@ const SidebarItems = () => {
             }
           })}
         </List>
+      )
       )
     )
   }

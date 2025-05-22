@@ -30,6 +30,74 @@ const BCrumb = [
   },
 ];
 
+const fupPackage = [
+  { id: 0, value: '500', label: '500Mb' },
+  { id: 1, value: '1000', label: '1Gb' },
+  { id: 2, value: '2000', label: '2Gb' },
+  { id: 3, value: '3000', label: '3Gb' },
+  { id: 4, value: '5000', label: '5Gb' }
+]
+
+
+const quotaPackage = [
+  { id: 0, value: '3000', label: '3Gb' },
+  { id: 1, value: '5000', label: '5Gb' },
+  { id: 2, value: '6000', label: '6Gb' },
+  { id: 3, value: '7000', label: '7Gb' },
+  { id: 4, value: '10000', label: '10Gb' },
+  { id: 5, value: '15000', label: '15Gb' },
+  { id: 6, value: '20000', label: '20Gb' },
+  { id: 7, value: '30000', label: '30Gb' }
+]
+
+const daysPackage = [
+  { id: 0, value: '1', label: '1 day' },
+  { id: 1, value: '2', label: '2 day' },
+  { id: 2, value: '3', label: '3 day' },
+  { id: 3, value: '4', label: '4 day' },
+  { id: 4, value: '5', label: '5 day' },
+  { id: 5, value: '6', label: '6 day' },
+  { id: 6, value: '7', label: '7 day' },
+  { id: 7, value: '8', label: '8 day' },
+  { id: 8, value: '10', label: '10 day' },
+  { id: 9, value: '12', label: '12 day' },
+  { id: 10, value: '15', label: '15 day' },
+  { id: 11, value: '20', label: '20 day' },
+  { id: 12, value: '30', label: '30 day' }
+]
+
+const quantityPackage = [
+  { id: 0, value: '1', label: '1' },
+  { id: 1, value: '2', label: '2' },
+  { id: 2, value: '3', label: '3' },
+  { id: 3, value: '4', label: '4' },
+  { id: 4, value: '5', label: '5' },
+  { id: 5, value: '6', label: '6' },
+  { id: 6, value: '7', label: '7' },
+  { id: 7, value: '8', label: '8' },
+  { id: 8, value: '9', label: '9' },
+  { id: 9, value: '10', label: '10' },
+  { id: 10, value: '11', label: '11' },
+  { id: 11, value: '12', label: '12' },
+  { id: 12, value: '13', label: '13' },
+  { id: 13, value: '14', label: '14' },
+  { id: 14, value: '15', label: '15' },
+  { id: 15, value: '16', label: '16' },
+  { id: 16, value: '17', label: '17' },
+  { id: 17, value: '18', label: '18' },
+  { id: 18, value: '19', label: '19' },
+  { id: 19, value: '20', label: '20' },
+  { id: 20, value: '21', label: '21' },
+  { id: 21, value: '22', label: '22' },
+  { id: 22, value: '23', label: '23' },
+  { id: 23, value: '24', label: '24' },
+  { id: 24, value: '25', label: '25' },
+  { id: 25, value: '26', label: '26' },
+  { id: 26, value: '27', label: '27' },
+  { id: 27, value: '28', label: '28' },
+  { id: 28, value: '29', label: '29' },
+  { id: 29, value: '30', label: '30' }
+]
 const CreateOrder = () => {
     const [country, setCountry] = React.useState([]);
     const [agents, setAgents] = React.useState([]);
@@ -37,6 +105,7 @@ const CreateOrder = () => {
     const [userName,setUserName] = useState('');
     const [userSession, setUserSession] = useState('');
     const [userLogin, setUserLogin] = useState('');
+    const [isSelectable, setIsSelectable] = useState(true);
   
     //const { addProduct, products } = useContext(ProductPartnerContext);
     const [showAlert, setShowAlert] = useState(false);
@@ -48,23 +117,14 @@ const CreateOrder = () => {
       email_pengguna: '',
       agent_name:'',
       type: '',
+      package_type: '',
       country: 'ASIA16',
       days: 0,
       fup:'',
       quota: '',
       quantity: 1,
       product_id: '',
-      product_price: 0,
-      ccid_1: '',
-      ccid_2: '',
-      ccid_3: '',
-      ccid_4: '',
-      ccid_5: '',
-      ccid_6: '',
-      ccid_7: '',
-      ccid_8: '',
-      ccid_9: '',
-      ccid_10: ''
+      product_price: 0
     });
   
     useEffect(() => {
@@ -173,13 +233,33 @@ const CreateOrder = () => {
 
                 const paket_id = response.data[0].package_id;
                 const paket_price = response.data[0].selling_price;
+                const packet_name = response.data[0].package_name;
 
                 //total product_price
                 const total_product_price = formData.quantity * paket_price;
                 console.log("total_product_price : ",total_product_price);
 
-                const ccid = [formData.ccid_1,formData.ccid_2,formData.ccid_3,formData.ccid_4,formData.ccid_5,formData.ccid_6,formData.ccid_7,formData.ccid_8,formData.ccid_9,formData.ccid_10];
+                /*
+                const ccid = [
+                    formData.ccid_1,
+                    formData.ccid_2,
+                    formData.ccid_3,
+                    formData.ccid_4,
+                    formData.ccid_5,
+                    formData.ccid_6,
+                    formData.ccid_7,
+                    formData.ccid_8,
+                    formData.ccid_9,
+                    formData.ccid_10
+                ];
+                */
                 
+                let ccid : string[] = [];
+                for(let i = 0; i < visibleFields.length; i++){
+                    ccid[i] = formData[`ccid_${i+1}`];
+                }
+                console.log("ccid generate: ",ccid);
+
                 let str_ccid = '';
                 for(let i = 0; i < ccid.length; i++){
                     if(ccid[i] != ""){
@@ -191,6 +271,7 @@ const CreateOrder = () => {
                 str_ccid = str_ccid.substring(0, str_ccid.length - 1);
                 console.log("ccid : ",str_ccid);
 
+                
                 //add order
                 const dataOrder = {
                     seq: 0,
@@ -212,7 +293,8 @@ const CreateOrder = () => {
                     order_ccid: str_ccid,
                     order_qty: formData.quantity,
                     order_product_price: paket_price,
-                    order_product_total_price: total_product_price
+                    order_product_total_price: total_product_price,
+                    package_name: packet_name
                 }
 
                 console.log("dataOrder : ",dataOrder);
@@ -230,6 +312,7 @@ const CreateOrder = () => {
                 await addOrderEvent(dataOrderEvent);
 
                 router('/order/list');
+                
             })
             .catch((error) => {
                 //console.error('Error adding orders:', error);
@@ -242,6 +325,11 @@ const CreateOrder = () => {
       setFormData((prevData) => {
         const newFormData = { ...prevData, [name]: value };
         //const totals = calculateTotals(newFormData.orders);
+        if(newFormData.package_type === "1" || newFormData.package_type === "2"){
+            setIsSelectable(false);
+        }else{
+            setIsSelectable(true);
+        }
         return {
           ...newFormData
         };
@@ -252,7 +340,7 @@ const CreateOrder = () => {
       e.preventDefault();
       try {
 
-        //console.log("data : ", formData);
+        console.log("data : ", formData);
         
         //get paket product
         fetchProductDetail(formData.country,formData.days,formData.fup);
@@ -315,6 +403,7 @@ const CreateOrder = () => {
         }
     };
 
+
     //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
     //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
     
@@ -343,7 +432,22 @@ const CreateOrder = () => {
                 console.log(error);
             });
   }
-  */  
+  */
+ 
+  //generate text box
+  const totalFields = 30; // Max ICCID fields
+  const fields = Array.from({ length: totalFields }, (_, i) => i + 1);
+  const columns = 3; // Jumlah kolom per baris
+
+  const visibleFields = fields.slice(0, formData.quantity); // quantity dari state/form
+
+  const groupedFields = [];
+    for (let i = 0; i < visibleFields.length; i += columns) {
+    groupedFields.push(visibleFields.slice(i, i + columns));
+  }
+  
+
+
   return (
     <PageContainer title="Create Simcard / eSIM" description="this is Create Simcard/eSIM">
         <Breadcrumb title="Create Simcard / eSIM" items={BCrumb} />
@@ -363,7 +467,6 @@ const CreateOrder = () => {
                         variant="outlined"
                         color="error"
                         onClick={() => {
-                            //router('/apps/invoice/list');
                             router('/order/list');
                         }}
                         >
@@ -478,10 +581,11 @@ const CreateOrder = () => {
                                 <FormControlLabel value="eSIM" control={<Radio />} label="eSIM" />
                             </RadioGroup>
                         </Grid>
+
                         <Grid
                             size={{
                             xs: 12,
-                            sm: 3
+                            sm: 4
                             }}>
                             <CustomFormLabel
                             htmlFor="PackageName"
@@ -506,6 +610,132 @@ const CreateOrder = () => {
                                 ))}
                             </CustomSelect>
                         </Grid>
+                        <Grid
+                            size={{
+                            xs: 12,
+                            sm: 4
+                            }}>
+                                &nbsp;
+                        </Grid>
+                        <Grid
+                            size={{
+                            xs: 12,
+                            sm: 4
+                            }}>
+                            <CustomFormLabel
+                            htmlFor="PackageName"
+                            sx={{
+                                mt: {
+                                xs: 0,
+                                sm: 3,
+                                },
+                            }}
+                            >
+                                Product Type
+                            </CustomFormLabel>   
+                            <RadioGroup
+                                aria-labelledby="radio-buttons-group-package"
+                                value={formData.package_type}
+                                onChange={handleChange}
+                                id='package_type'
+                                name="package_type"
+                                row
+                            >
+                                <FormControlLabel value="1" control={<Radio />} label="Unlimited" />
+                                <FormControlLabel value="2" control={<Radio />} label="Quota Based" />
+                            </RadioGroup>
+                        </Grid>
+                        <Grid
+                            size={{
+                            xs: 12,
+                            sm: 4
+                            }}>
+                            <CustomFormLabel
+                            htmlFor="PackageName"
+                            sx={{
+                                mt: {
+                                xs: 0,
+                                sm: 3,
+                                },
+                            }}
+                            >
+                                Product Package
+                            </CustomFormLabel>
+                            {formData.package_type === "1" ? (
+                                <CustomSelect
+                                    id="fup"
+                                    name="fup"
+                                    value={formData.fup}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    >
+                                    {fupPackage.map((item: any) => (
+                                        <MenuItem key={item.id} value={item.value}>{item.label}</MenuItem>
+                                    ))}
+                                </CustomSelect> 
+                            ) : (
+                                formData.package_type === "2" ? (
+                                    <CustomSelect
+                                        id="quota"
+                                        name="quota"
+                                        value={formData.quota}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        >
+                                        {quotaPackage.map((item: any) => (
+                                            <MenuItem key={item.id} value={item.value}>{item.label}</MenuItem>
+                                        ))}
+                                    </CustomSelect> 
+                                ) : (
+                                    <CustomSelect
+                                        id="package"
+                                        name="package"
+                                        fullWidth
+                                        disabled
+                                        >
+                                        <MenuItem value="">Select Package</MenuItem>
+                                    </CustomSelect>
+                                )  
+                            )
+                            }
+                        </Grid>
+                        <Grid
+                            size={{
+                            xs: 12,
+                            sm: 4
+                            }}>
+                            <CustomFormLabel
+                            htmlFor="Days"
+                            sx={{
+                                mt: {
+                                xs: 0,
+                                sm: 3,
+                                },
+                            }}
+                            >
+                                Days
+                            </CustomFormLabel>
+                            <CustomSelect
+                                id="days"
+                                name="days"
+                                value={formData.days}
+                                onChange={handleChange}
+                                fullWidth
+                                disabled={isSelectable} 
+                                >
+                                {daysPackage.map((item: any) => (
+                                    <MenuItem key={item.id} value={item.value}>{item.label}</MenuItem>
+                                ))}
+                            </CustomSelect> 
+                        </Grid>
+                        {/*
+                        <Grid
+                            size={{
+                            xs: 12,
+                            sm: 4
+                            }}>
+                            &nbsp;
+                        </Grid>                 
                         <Grid
                             size={{
                             xs: 12,
@@ -610,6 +840,7 @@ const CreateOrder = () => {
                                 <FormControlLabel value="30" control={<Radio />} label="30" />
                             </RadioGroup>
                         </Grid>
+                        */}
                         <Grid
                             size={{
                             xs: 12,
@@ -632,20 +863,62 @@ const CreateOrder = () => {
                                 value={formData.quantity}
                                 onChange={handleChange}
                                 fullWidth
+                                disabled={isSelectable}
                                 >
-                                <MenuItem value="1">1</MenuItem>
-                                <MenuItem value="2">2</MenuItem>
-                                <MenuItem value="3">3</MenuItem>
-                                <MenuItem value="4">4</MenuItem>
-                                <MenuItem value="5">5</MenuItem>
-                                <MenuItem value="6">6</MenuItem>
-                                <MenuItem value="7">7</MenuItem>
-                                <MenuItem value="8">8</MenuItem>
-                                <MenuItem value="9">9</MenuItem>
-                                <MenuItem value="10">10</MenuItem>
+                                {quantityPackage.map((item: any) => (
+                                    <MenuItem key={item.id} value={item.value}>{item.label}</MenuItem>
+                                ))}
                             </CustomSelect>
                         </Grid>
                     </Grid>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            sm: 12
+                            }}>
+                        <CustomFormLabel
+                            htmlFor="title_price"
+                            sx={{
+                                mt: 3,
+                                mb: 2
+                            }}
+                            >
+                            ICCID - (eSIM tdk perlu di isi) 
+                        </CustomFormLabel>       
+                    </Grid>
+                    {groupedFields.map((group, rowIndex) => (
+                    <Grid container spacing={2} key={rowIndex}>
+                        {group.map((num) => (
+                            <React.Fragment key={num}>
+                                <Grid size={{
+                                        xs: 12,
+                                        sm: 1
+                                    }}>
+                                    <CustomFormLabel
+                                        htmlFor={`ccid_${num}`}
+                                        sx={{ mt: 1, textAlign: 'center' }}
+                                    >
+                                        {num}.
+                                    </CustomFormLabel>
+                                </Grid>
+                                <Grid size={{
+                                        xs: 12,
+                                        sm: 3
+                                    }}>
+                                    <CustomTextField
+                                        id={`ccid_${num}`}
+                                        name={`ccid_${num}`}
+                                        value={formData[`ccid_${num}`] || ''}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Grid>
+                            </React.Fragment>
+                        ))}
+                    </Grid>
+                    ))}
+                    {/** 
                     <Grid
                         size={{
                             xs: 12,
@@ -943,7 +1216,7 @@ const CreateOrder = () => {
                             </Grid>
                         </Grid>
                     </Grid>
-                    
+                    */}
                     {showAlert && (
                     <Alert severity="success" sx={{ position: 'fixed', top: 16, right: 16 }}>
                         Order created successfully.

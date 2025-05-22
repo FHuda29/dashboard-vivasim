@@ -288,8 +288,7 @@ const UserList = () => {
       <Breadcrumb title="Users" items={BCrumb} />
       {/* end breadcrumb */}
       <ParentCard title="User List">
-        <BlankCard>
-            <Box>
+          <Box mb={2}>
                 <Stack
                     mt={3}
                     justifyContent="space-between"
@@ -322,7 +321,8 @@ const UserList = () => {
                       </Button>
                     </Box>
                 </Stack>
-            </Box>
+        </Box>
+        <BlankCard>
           <TableContainer>
             <Table
               aria-label="custom pagination table"

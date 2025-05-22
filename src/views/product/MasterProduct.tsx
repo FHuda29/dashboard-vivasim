@@ -188,8 +188,7 @@ const MasterProduct = () => {
       <Breadcrumb title="Products" items={BCrumb} />
       {/* end breadcrumb */}
       <ParentCard title="Master Product List">
-        <BlankCard>
-            <Box>
+          <Box mb={2}>
                 <Stack
                     mt={3}
                     justifyContent="space-between"
@@ -232,7 +231,8 @@ const MasterProduct = () => {
                       */}
                     </Box>
                 </Stack>
-            </Box>
+        </Box>
+        <BlankCard>    
           <TableContainer>
             <Table
               aria-label="custom pagination table"
@@ -255,7 +255,7 @@ const MasterProduct = () => {
                     <Typography variant="subtitle2">Days</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Quota</Typography>
+                    <Typography variant="subtitle2">Quota (MB)</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="subtitle2">Selling Price</Typography>

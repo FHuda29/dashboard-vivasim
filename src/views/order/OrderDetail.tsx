@@ -234,7 +234,7 @@ const OrderDetail = () => {
             <Breadcrumb title="Order" items={BCrumb} />
             <ParentCard title="Order Detail">
                 <BlankCard>
-                    <Box mt={2} mb={2}>
+                    <Box m={2}>
                         {rows.map((row) => (
                         <Grid key={row.seq}>
                             <Grid container spacing={1}>
@@ -374,6 +374,27 @@ const OrderDetail = () => {
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
                                         : {row.order_country_code}
+                                    </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 2 }}>
+                                    <Typography variant="h6">
+                                        Package ID
+                                    </Typography>
+                                </Grid>
+                                
+                                <Grid size={{ xs: 10 }}>
+                                    <Typography variant="subtitle1">
+                                        : {row.order_product}
+                                    </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 2 }}>
+                                    <Typography variant="h6">
+                                        Package Name
+                                    </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 10 }}>
+                                    <Typography variant="subtitle1">
+                                        : {row.package_name}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>

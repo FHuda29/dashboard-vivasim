@@ -32,8 +32,8 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react';
-import { numberFormat, orderList, formatDate } from "src/utils/Utils";
+import { IconEdit, IconEye, IconFileInvoice, IconHistory } from '@tabler/icons-react';
+import { numberFormat, orderList, formatDate, currentDate,orderEventList } from "src/utils/Utils";
 
 //api
 import ApiConfig  from "src/constants/apiConstants";
@@ -115,7 +115,8 @@ const OrderList = () => {
     const router = useNavigate();
     const [userLevel, setUserLevel] = React.useState('');
     const [userSession, setUserSession] = React.useState('');
-
+    const [userName, setUserName] = React.useState('');
+        
     useEffect(() => {
         const data_success_login = localStorage.getItem('data_success_login');
         if (data_success_login) {
@@ -128,7 +129,7 @@ const OrderList = () => {
             
             setUserLevel(parsedData.session_level);
             setUserSession(parsedData.session_name);
-
+            setUserName(parsedData.user_name);
             
 
             if(parsedData.session_level.toLowerCase() === 'partner'){
@@ -214,15 +215,55 @@ const OrderList = () => {
         router('/order/detail/'+order_id);
     }
     
+    const handleEditOrder = (order_id:string) => {
+        router('/order/edit/'+order_id);
+    }
+
     const handleHistory = (order_id:string) => {
         router('/order/history/'+order_id);
     }
+
+    const handleClose = async (order_id:string) => {
+        try {
+            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Closed");
+            const updateStatus = response.data;
+            if(updateStatus){
+                if(updateStatus.order_id === order_id){
+                    //update hsitory
+                    const event_date = currentDate();
+                    const dataOrderEvent = {
+                        seq: 0,
+                        order_id: order_id,
+                        event_name: 'Closed - Upload Simcard',
+                        event_date: event_date,
+                        username: userName
+                    }
+                    await addOrderEvent(dataOrderEvent);
+
+                    //router('/order/list');
+                    window.location.reload();
+                }
+            }else{
+                console.error('Error update status gagal');    
+            }
+        } catch (error) {
+            console.error('Error adding order events :', error);
+        }
+    }
+
+    const addOrderEvent = async (orderEvent: orderEventList) => {
+        try {
+            const response = await axios.post(ApiConfig.apiUrl + 'order/event', orderEvent);
+            const addOrderEvent = response.data;
+        } catch (error) {
+            console.error('Error adding order events :', error);
+        }
+    };
 
     return (
         <PageContainer title="Order" description="this is order page">
             <Breadcrumb title="Order" items={BCrumb} />
             <ParentCard title="Order List">
-                <BlankCard>
                 <Box mt={2} mb={2}>
                     <Grid size={{ xs: 12 }}>
                         <Grid container spacing={2}>
@@ -313,7 +354,8 @@ const OrderList = () => {
                             </Grid>
                         </Grid>
                     </Grid>    
-                    </Box>
+                </Box>
+                <BlankCard>
                     <TableContainer>
                         <Table
                             aria-label="custom pagination table"
@@ -378,24 +420,67 @@ const OrderList = () => {
                                 ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : rows
                                 ).map((row, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>
-                                        <Tooltip title="Detail">
-                                            <IconButton
-                                                color="success"
-                                                onClick={() => handleDetail(row.order_id)}
-                                            >
-                                                <IconEye width={22} />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="History">
-                                            <IconButton
-                                                color="primary" 
-                                                onClick={() => handleHistory(row.order_id)}                                               
-                                            >
-                                                <IconHistory width={22} />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
+                                    {userLevel.toLocaleLowerCase() === 'cs-web' ? (
+                                        row.order_status === 'Paid' ? (
+                                            <TableCell>
+                                                <Tooltip title="Detail CCID">
+                                                    <IconButton
+                                                        color="success"
+                                                        onClick={() => handleDetail(row.order_id)}
+                                                    >
+                                                        <IconEye width={22} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="Close Order">
+                                                    <IconButton
+                                                        color="primary" 
+                                                        onClick={() => handleClose(row.order_id)}                                               
+                                                    >
+                                                        <IconFileInvoice width={22} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
+                                        ):(
+                                            <TableCell>
+                                                <Tooltip title="History">
+                                                    <IconButton
+                                                        color="secondary" 
+                                                        onClick={() => handleHistory(row.order_id)}                                               
+                                                        >
+                                                        <IconHistory width={22} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
+                                        )
+                                    ):(
+                                        <TableCell>
+                                            <Tooltip title="Detail CCID">
+                                                <IconButton
+                                                    color="success"
+                                                    onClick={() => handleDetail(row.order_id)}
+                                                >
+                                                    <IconEye width={22} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Edit Order">
+                                                <IconButton
+                                                    color="primary"
+                                                    onClick={() => handleEditOrder(row.order_id)}
+                                                >
+                                                    <IconEdit width={22} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="History">
+                                                <IconButton
+                                                    color="secondary" 
+                                                    onClick={() => handleHistory(row.order_id)}                                               
+                                                    >
+                                                    <IconHistory width={22} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    )
+                                    }
                                     <TableCell>
                                         <Typography variant="subtitle2">{index+1}</Typography>
                                     </TableCell>

@@ -1,0 +1,11 @@
+Koreksi hasil presntasi Jumat 16 Mei 2025
+-----------------------------------------------------------------------------
+1. Dalam box move to partner, tambahkan dalam box untuk add partner baru.           (done)
+2. Box Quota tambahkan keterangan MB                                                (done)
+3. Box ICCID jadi max 30 box                                                        (done)
+4. Klo pake mesin scanner, bisa auto feel saat scan barcode                         (perlu test)
+5. Saat login Partner menu sisi kiri, namingnya salah, seharusnya agent.            (done)
+6. Pada Kolom jumlah ICCID, memunculkan jumlah box ICCID                            (done)
+7. Tambahan menu Bisa untuk topup plan/ tambah quota (dalam menu order, dibawah create simcard) - (musti cek yg existing)
+8. Kolom pilihan Quota / Days / FUP tidak bisa di klik ketiganya bersamaan atau buat box untuk pilihan FUP atau Quota base dengan teknik drop down. (done)
+Terima kasih.

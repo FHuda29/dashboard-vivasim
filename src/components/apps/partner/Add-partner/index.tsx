@@ -94,6 +94,7 @@ const CreatePartner = () => {
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
+    const mode = localStorage.getItem('mode');
     e.preventDefault();
     try {
       await addPartner(formData);
@@ -112,7 +113,13 @@ const CreatePartner = () => {
         setShowAlert(false);
       }, 5000);
       
-      router('/partner/list');
+      if(mode === 'move_simcard'){
+        localStorage.removeItem('mode');
+        router('/inventory/movesim');
+      }else{
+        router('/partner/list');
+      }
+      //router('/partner/list');
     } catch (error) {
       console.error('Error adding partner:', error);
     }

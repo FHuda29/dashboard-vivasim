@@ -221,6 +221,7 @@ export interface orderList {
     order_qty: number;
     order_product_price: number;
     order_product_total_price: number;
+    package_name: string;
 }
 
 export interface orderEventList {

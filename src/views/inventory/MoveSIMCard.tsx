@@ -12,6 +12,9 @@ import {
   MenuItem,
   Link,
   Alert,
+  Icon,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import PageContainer from 'src/components/container/PageContainer';
@@ -28,6 +31,7 @@ import { useNavigate } from 'react-router';
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { IconPlus, IconRefresh } from '@tabler/icons-react';
 
 
 const apiUrl = ApiConfig.apiUrl;
@@ -45,6 +49,7 @@ const BCrumb = [
 const MoveSIMCard = () => {
     const [userLevel, setUserLevel] = React.useState("");
     const [userSession, setUserSession] = React.useState("");
+    const [tittle, setTittle] = React.useState("");
 
     const [listArrageCCID, setListArrageCCID] = React.useState([]);
     //const [productMaster, setProductMaster] = React.useState([]);
@@ -68,9 +73,11 @@ const MoveSIMCard = () => {
             //const user_login = parsedData.session_name.split('-')[0];
             //fetchAgentListCobrand(user_login);
             fetchAgentListCobrand((parsedData.session_name));
+            setTittle('Move Simcard to Agent');
           }else{
             //load inventory
             fetchPartnerList();
+            setTittle('Move Simcard to Partner');
           }
         }else{
           router('/auth/login');
@@ -187,37 +194,53 @@ const MoveSIMCard = () => {
         
     };
 
+    const handleAddPartner = () => {
+        localStorage.setItem('mode', 'move_simcard');
+        router('/apps/partner/create');
+    }
+
     return (
         <PageContainer title="Inventory" description="this is inventory page">
             <Breadcrumb title="Inventory" items={BCrumb} />
-            <ParentCard title="Move Simcard to Partner">
-                <BlankCard>
-                <Box mt={2} mb={2}>
+            <ParentCard title={tittle}>
+                <Box mt={2}>
                     <Grid size={{ xs: 12 }}>
                         <Grid container spacing={2}>
                             {userLevel.toLowerCase() === 'partner' ? (
                                 <Grid size={{ xs: 3 }}>
-                                <Typography variant="subtitle1">
-                                    Move to Agent 
-                                </Typography>
-                                <CustomSelect
-                                    fullWidth
-                                    variant="outlined"
-                                    value={agentCode || ''}
-                                    onChange={(e) => setAgentCode(e.target.value)}
-                                    >
-                                    {agents.map((option) => (
-                                        <MenuItem key={option.seq} value={option.agent_code}>
-                                        {option.agent_code} - {option.name}
-                                        </MenuItem>
-                                    ))}
-                                </CustomSelect>
-                            </Grid>
+                                    <Typography variant="subtitle1" mt={1} mb={1}>
+                                        Move to Agent 
+                                    </Typography>
+                                    <CustomSelect
+                                        fullWidth
+                                        variant="outlined"
+                                        value={agentCode || ''}
+                                        onChange={(e) => setAgentCode(e.target.value)}
+                                        >
+                                        {agents.map((option) => (
+                                            <MenuItem key={option.seq} value={option.agent_code}>
+                                            {option.agent_code} - {option.name}
+                                            </MenuItem>
+                                        ))}
+                                    </CustomSelect>
+                                </Grid>
                             ):(
                                 <Grid size={{ xs: 3 }}>
-                                    <Typography variant="subtitle1">
-                                        Move to Partner
-                                    </Typography>
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        spacing={2}
+                                    >
+                                        <Typography variant="subtitle1">
+                                            Move to Partner 
+                                        </Typography>
+                                        <IconButton onClick={() => handleAddPartner()}>
+                                            <Tooltip title="Add Partner">
+                                                <IconPlus />
+                                            </Tooltip> 
+                                        </IconButton>
+                                    </Stack>     
                                     <CustomSelect
                                         fullWidth
                                         variant="outlined"
@@ -232,8 +255,8 @@ const MoveSIMCard = () => {
                                     </CustomSelect>
                                 </Grid>
                             )}
-                            <Grid size={{ xs: 3 }}>
-                                <Typography variant="subtitle1">
+                            <Grid size={{ xs: 3}}>
+                                <Typography variant="subtitle1" mt={1} mb={1}>
                                     ICCID Serial From (19 digit awal)
                                 </Typography>
                                 <CustomTextField
@@ -243,7 +266,7 @@ const MoveSIMCard = () => {
                                 />
                             </Grid>
                             <Grid size={{ xs: 3 }}>
-                                <Typography variant="subtitle1">
+                                <Typography variant="subtitle1" mt={1} mb={1}>
                                     ICCID Serial To (19 digit awal) 
                                 </Typography>
                                 <CustomTextField
@@ -272,7 +295,7 @@ const MoveSIMCard = () => {
                             </Grid>
                             */}
                             <Grid size={{ xs: 3 }}>
-                                <Typography variant="subtitle1">
+                                <Typography variant="subtitle1" mt={1} mb={1}>
                                 Confirm Move ?
                                 </Typography>
                                 <CustomSelect
@@ -305,7 +328,6 @@ const MoveSIMCard = () => {
                             Move Simcard successfully.
                         </Alert>
                     )}
-                </BlankCard>
             </ParentCard>
         </PageContainer>
     );

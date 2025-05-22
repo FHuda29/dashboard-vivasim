@@ -57,7 +57,7 @@ const MenuitemsPartner: MenuitemsType[] = [
       },
       {
         id: uniqueId(),
-        title: 'Move Simcard to Partner',
+        title: 'Move Simcard to Agent',
         icon: IconPoint,
         href: '/inventory/movesim',
       },

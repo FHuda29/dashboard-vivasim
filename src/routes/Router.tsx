@@ -104,6 +104,7 @@ const OrderList = Loadable(lazy(() => import('../views/order/OrderList')));
 const OrderDetail = Loadable(lazy(() => import('../views/order/OrderDetail')));
 const OrderEvent = Loadable(lazy(() => import('../views/order/OrderEvent')));
 const CreateOrder = Loadable(lazy(() => import('../views/apps/order/Create')));
+const EditOrder = Loadable(lazy(() => import('../views/apps/order/Edit')));
 
 //product 
 const MasterProduct = Loadable(lazy(() => import('../views/product/MasterProduct')));
@@ -222,6 +223,7 @@ const Router = [
       { path: '/order/detail/:order_id', exact: true, element: <OrderDetail /> },
       { path: '/order/history/:order_id', exact: true, element: <OrderEvent /> },
       { path: '/order/create', exact: true, element: <CreateOrder /> },
+      { path: '/order/edit/:order_id', exact: true, element: <EditOrder /> },
       { path: '/product/master', exact: true, element: <MasterProduct /> },
       { path: '/product/partner', exact: true, element: <PartnerProduct /> },
       { path: '/apps/product/create', element: <ProductCreate /> },
