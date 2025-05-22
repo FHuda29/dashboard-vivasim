@@ -17,6 +17,7 @@ import ApiConfig  from "src/constants/apiConstants";
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 import { text } from 'stream/consumers';
 import { textAlign } from '@mui/system';
+import { tr } from 'date-fns/locale';
 const apiUrl = ApiConfig.apiUrl;
 
 
@@ -107,6 +108,9 @@ const EditOrder = () => {
     const [userSession, setUserSession] = useState('');
     const [userLogin, setUserLogin] = useState('');
     const [isSelectable, setIsSelectable] = useState(true);
+    const [showFupSelect, setShowFupSelect] = useState(false);
+    const [showQuotaSelect, setShowQuotaSelect] = useState(false);
+
     //const [orderList, setOrderList] = React.useState([]);
 
     //const { addProduct, products } = useContext(ProductPartnerContext);
@@ -114,6 +118,7 @@ const EditOrder = () => {
     const router = useNavigate();
     const [formData, setFormData] = useState({
       seq: 0,
+      order_id: '',
       nama_pengguna: '',
       telp_pengguna: '',
       email_pengguna: '',
@@ -126,7 +131,8 @@ const EditOrder = () => {
       quota: '',
       quantity: 1,
       product_id: '',
-      product_price: 0
+      product_price: 0,
+      ccid: ''
     });
   
     useEffect(() => {
@@ -202,6 +208,8 @@ const EditOrder = () => {
                 
                 setFormData((prevData: any) => ({
                   ...prevData,
+                  seq: response.data[0].seq,
+                  order_id: response.data[0].order_id,
                   nama_pengguna: response.data[0].order_customer_name,
                   telp_pengguna: response.data[0].order_contact_phone,
                   email_pengguna: response.data[0].order_contact_email,
@@ -210,11 +218,29 @@ const EditOrder = () => {
                   country: response.data[0].order_country_code,
                   days: response.data[0].order_days,
                   fup: response.data[0].order_fup,
-                  quota: response.data[0].quota,
+                  quota: response.data[0].order_quota,
                   quantity: response.data[0].order_qty,
                   product_id: response.data[0].order_product,
-                  product_price: response.data[0].order_product_price
+                  product_price: response.data[0].order_product_price,
+                  ccid: response.data[0].order_ccid
                 }));
+
+                setIsSelectable(false);
+                if(response.data[0].order_fup.length > 0){
+                  setShowFupSelect(true);
+                  formData.fup = response.data[0].order_fup;
+                }else{
+                  setShowQuotaSelect(true);  
+                  formData.quota = response.data[0].order_quota;  
+                }
+                 
+                
+                const qty = response.data[0].order_qty;
+                const parsedValues = response.data[0].order_ccid.split("|");
+                for(let i = 1; i <= qty; i++){
+                  formData[`ccid_${i}`] = parsedValues[i-1];
+                }   
+
             })
             .catch((error) => {
                 console.log(error);
@@ -310,8 +336,8 @@ const EditOrder = () => {
                 
                 //add order
                 const dataOrder = {
-                    seq: 0,
-                    order_id: order_id,
+                    seq: formData.seq,
+                    order_id: formData.order_id,
                     order_date: order_date,
                     order_type: formData.type,
                     order_status: 'New',
@@ -333,15 +359,16 @@ const EditOrder = () => {
                     package_name: packet_name
                 }
                 
-                console.log("dataOrder : ",dataOrder);
-                await addOrder(dataOrder);
+                console.log("formData.seq: ",formData.seq);
+                console.log("dataOrder update: ",dataOrder);
+                await updateOrder(formData.seq,dataOrder);
 
                 //add order events
                 const event_date = currentDate();
                 const dataOrderEvent = {
                     seq: 0,
                     order_id: order_id,
-                    event_name: 'New Order',
+                    event_name: 'Edit New Order',
                     event_date: event_date,
                     username: userName
                 }
@@ -361,8 +388,14 @@ const EditOrder = () => {
       setFormData((prevData) => {
         const newFormData = { ...prevData, [name]: value };
         //const totals = calculateTotals(newFormData.orders);
-        if(newFormData.package_type === "1" || newFormData.package_type === "2"){
+        if(newFormData.package_type === "1"){
             setIsSelectable(false);
+            setShowFupSelect(true);
+            setShowQuotaSelect(false);
+        }else if(newFormData.package_type === "2"){  
+            setIsSelectable(false);
+            setShowFupSelect(false);
+            setShowQuotaSelect(true);
         }else{
             setIsSelectable(true);
         }
@@ -439,7 +472,15 @@ const EditOrder = () => {
         }
     };
 
-
+    const updateOrder = async (seq: number,order: orderList) => {
+        try {
+            const response = await axios.put(ApiConfig.apiUrl + 'orders/update/'+ seq, order);
+            const addOrder = response.data;
+            //setProducts((prevProduct) => [...prevProduct, addOrder]);
+        } catch (error) {
+            console.error('Error adding orders:', error);
+        }
+    }
     //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
     //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
     
@@ -697,6 +738,7 @@ const EditOrder = () => {
                             >
                                 Product Package
                             </CustomFormLabel>
+                            {/*
                             {formData.package_type === "1" ? (
                                 <CustomSelect
                                     id="fup"
@@ -732,8 +774,38 @@ const EditOrder = () => {
                                         <MenuItem value="">Select Package</MenuItem>
                                     </CustomSelect>
                                 )  
-                            )
-                            }
+                            )}
+                             */}
+                             {showFupSelect && (
+                                <CustomSelect
+                                    id="fup"
+                                    name="fup"
+                                    value={formData.fup}
+                                    onChange={handleChange}
+                                    fullWidth
+                                >
+                                    {fupPackage.map((item: any) => (
+                                    <MenuItem key={item.id} value={item.value}>
+                                        {item.label}
+                                    </MenuItem>
+                                    ))}
+                                </CustomSelect>
+                              )}
+                              {showQuotaSelect && (
+                                <CustomSelect
+                                        id="quota"
+                                        name="quota"
+                                        value={formData.quota}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        >
+                                        {quotaPackage.map((item: any) => (
+                                            <MenuItem key={item.id} value={item.value}>
+                                                {item.label}
+                                            </MenuItem>
+                                        ))}
+                                </CustomSelect>
+                              )}   
                         </Grid>
                         <Grid
                             size={{

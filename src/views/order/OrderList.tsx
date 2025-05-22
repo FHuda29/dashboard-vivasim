@@ -462,14 +462,19 @@ const OrderList = () => {
                                                     <IconEye width={22} />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="Edit Order">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleEditOrder(row.order_id)}
-                                                >
-                                                    <IconEdit width={22} />
-                                                </IconButton>
-                                            </Tooltip>
+                                            {row.order_status === 'New' ? (
+                                                <Tooltip title="Edit Order">
+                                                    <IconButton
+                                                        color="primary"
+                                                        onClick={() => handleEditOrder(row.order_id)}
+                                                    >
+                                                        <IconEdit width={22} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            ):(
+                                                <></>
+                                            )
+                                            }
                                             <Tooltip title="History">
                                                 <IconButton
                                                     color="secondary" 
@@ -508,7 +513,9 @@ const OrderList = () => {
                                                   ? 'warning'
                                                   : row.order_status === 'Cancel'
                                                     ? 'error'
-                                                    : 'secondary'
+                                                    : row.order_status === 'Closed'
+                                                    ? 'primary'
+                                                     : 'secondary'
                                             }
                                             sx={{
                                               borderRadius: '6px',
