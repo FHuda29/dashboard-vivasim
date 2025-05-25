@@ -99,6 +99,10 @@ const Inventory = Loadable(lazy(() => import('../views/inventory/ListInventory')
 const MoveSIMCard = Loadable(lazy(() => import('../views/inventory/MoveSIMCard')));
 const SummaryInventory = Loadable(lazy(() => import('../views/inventory/SummaryInventory')));
 
+//topup
+const TopupList = Loadable(lazy(() => import('../views/topup/ListTopup')));
+const CreateTopup = Loadable(lazy(() => import('../views/apps/topup/Create')));
+
 //order
 const OrderList = Loadable(lazy(() => import('../views/order/OrderList')));
 const OrderDetail = Loadable(lazy(() => import('../views/order/OrderDetail')));
@@ -219,6 +223,8 @@ const Router = [
       { path: '/inventory/list', exact: true, element: <Inventory /> },
       { path: '/inventory/movesim', exact: true, element: <MoveSIMCard /> },
       { path: '/inventory/summary', exact: true, element: <SummaryInventory /> },
+      { path: '/topup/list', exact: true, element: <TopupList /> },
+      { path: '/topup/create/:ccid', exact: true, element: <CreateTopup /> },
       { path: '/order/list', exact: true, element: <OrderList /> },
       { path: '/order/detail/:order_id', exact: true, element: <OrderDetail /> },
       { path: '/order/history/:order_id', exact: true, element: <OrderEvent /> },

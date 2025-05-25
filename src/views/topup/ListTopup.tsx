@@ -42,7 +42,7 @@ import { numberFormat, InventoryList, formatDate } from "src/utils/Utils";
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
 import axios from 'axios';
-import { IconEye, IconHistory, IconSearch, IconTrash } from '@tabler/icons-react';
+import { IconEdit, IconEye, IconHistory, IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 
 const apiUrl = ApiConfig.apiUrl;
@@ -111,11 +111,11 @@ const BCrumb = [
     title: 'Home',
   },
   {
-    title: 'Inventory',
+    title: 'Topup',
   },
 ];
 
-const Inventory = () => {
+const TopupList = () => {
   const router = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectAll, setSelectAll] = React.useState(false);
@@ -173,7 +173,7 @@ const Inventory = () => {
   }
 
   const fetchInventoryByAgent = async (user_login:string) => {
-    let end_point = apiUrl + "inventory/agent/"+user_login;
+    let end_point = apiUrl + "inventory/agent/"+user_login+"/status/Used";
     axios
         .get(end_point)
         .then((response) => {
@@ -235,6 +235,10 @@ const Inventory = () => {
 
   const handleHistory = (order_id:string) => {
         router('/order/history/'+order_id);
+  }
+
+  const handleCreateTopup = (ccid:string) => {
+    router('/topup/create/'+ccid);
   }
 
   return (
@@ -375,6 +379,9 @@ const Inventory = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>
+                      <Typography variant="subtitle2">Action</Typography>
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="subtitle2">Seq</Typography>
                     </TableCell>
                     <TableCell>
@@ -415,6 +422,16 @@ const Inventory = () => {
                     : rows
                   ).map((row, index) => (
                     <TableRow key={index}>
+                      <TableCell>
+                        <Tooltip title="Create Topup">
+                            <IconButton
+                                color="primary"
+                                onClick={() => handleCreateTopup(row.iccid)}
+                                >
+                                <IconEdit width={22} />
+                            </IconButton>
+                        </Tooltip>
+                      </TableCell>
                       <TableCell>
                         <Typography variant="caption">{index+1}</Typography>
                       </TableCell>
@@ -513,4 +530,4 @@ const Inventory = () => {
   );
 };
 
-export default Inventory;
+export default TopupList;

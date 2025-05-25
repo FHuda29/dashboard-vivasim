@@ -32,7 +32,7 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-import { IconEdit, IconEye, IconFileInvoice, IconHistory } from '@tabler/icons-react';
+import { IconClearAll, IconEdit, IconEye, IconFileInvoice, IconHistory, IconRowRemove } from '@tabler/icons-react';
 import { numberFormat, orderList, formatDate, currentDate,orderEventList } from "src/utils/Utils";
 
 //api
@@ -41,6 +41,7 @@ import { useEffect } from 'react';
 import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
+import { IconCactus } from '@tabler/icons-react';
 
 const apiUrl = ApiConfig.apiUrl;
 
@@ -221,6 +222,35 @@ const OrderList = () => {
 
     const handleHistory = (order_id:string) => {
         router('/order/history/'+order_id);
+    }
+
+    const handleCancel = async (order_id:string) => {
+        //router('/order/history/'+order_id);
+        try {
+            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Cancelled");
+            const updateStatus = response.data;
+            if(updateStatus){
+                if(updateStatus.order_id === order_id){
+                    //update hsitory
+                    const event_date = currentDate();
+                    const dataOrderEvent = {
+                        seq: 0,
+                        order_id: order_id,
+                        event_name: 'Cancelled - Order Simcard/eSIM',
+                        event_date: event_date,
+                        username: userName
+                    }
+                    await addOrderEvent(dataOrderEvent);
+
+                    //router('/order/list');
+                    window.location.reload();
+                }
+            }else{
+                console.error('Error update status gagal');    
+            }
+        } catch (error) {
+            console.error('Error adding order events :', error);
+        }
     }
 
     const handleClose = async (order_id:string) => {
@@ -441,16 +471,53 @@ const OrderList = () => {
                                                 </Tooltip>
                                             </TableCell>
                                         ):(
-                                            <TableCell>
-                                                <Tooltip title="History">
-                                                    <IconButton
-                                                        color="secondary" 
-                                                        onClick={() => handleHistory(row.order_id)}                                               
+                                            row.order_status === 'New' ? (
+                                                <TableCell>
+                                                    <Tooltip title="Detail CCID">
+                                                        <IconButton
+                                                            color="success"
+                                                            onClick={() => handleDetail(row.order_id)}
                                                         >
-                                                        <IconHistory width={22} />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </TableCell>
+                                                            <IconEye width={22} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="History">
+                                                        <IconButton
+                                                            color="secondary" 
+                                                            onClick={() => handleHistory(row.order_id)}                                               
+                                                            >
+                                                            <IconHistory width={22} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Cancel Order">
+                                                        <IconButton
+                                                            color="error" 
+                                                            onClick={() => handleCancel(row.order_id)}                                               
+                                                            >
+                                                            <IconRowRemove width={22} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            ):(
+                                                <TableCell>
+                                                    <Tooltip title="Detail CCID">
+                                                        <IconButton
+                                                            color="success"
+                                                            onClick={() => handleDetail(row.order_id)}
+                                                        >
+                                                            <IconEye width={22} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="History">
+                                                        <IconButton
+                                                            color="secondary" 
+                                                            onClick={() => handleHistory(row.order_id)}                                               
+                                                            >
+                                                            <IconHistory width={22} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            )
                                         )
                                     ):(
                                         <TableCell>
@@ -511,7 +578,7 @@ const OrderList = () => {
                                                 ? 'success'
                                                 : row.order_status === 'New'
                                                   ? 'warning'
-                                                  : row.order_status === 'Cancel'
+                                                  : row.order_status === 'Cancelled'
                                                     ? 'error'
                                                     : row.order_status === 'Closed'
                                                     ? 'primary'
