@@ -4,28 +4,16 @@ import { ProductPartnerContext } from 'src/context/ProductPartnerContext/index';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import {
   Button,
-  MenuItem,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Alert,
-  IconButton,
-  Tooltip,
   Box,
   Stack,
   Divider,
   Grid2 as Grid,
 } from '@mui/material';
-import { format, isValid } from 'date-fns';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
-import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import { IconSquareRoundedPlus, IconTrash } from '@tabler/icons-react';
+
 
 const EditProductPartner = () => {
   const { seq } = useParams();   
@@ -98,9 +86,7 @@ const EditProductPartner = () => {
     return <div>Please select an invoice.</div>;
   }
 
-  //const orderDate = selectedProduct.orderDate;
-  //const parsedDate = isValid(new Date(orderDate)) ? new Date(orderDate) : new Date();
-  //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
+  
 
   return (
     (<Box>
@@ -130,32 +116,6 @@ const EditProductPartner = () => {
         </Box>
       </Stack>
       <Divider></Divider>
-      {/*
-      <Stack
-        direction="row"
-        spacing={{ xs: 1, sm: 2, md: 4 }}
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
-        <Box>
-          <CustomFormLabel htmlFor="demo-simple-select">Order Status</CustomFormLabel>
-          <CustomSelect
-            value={editedInvoice.status}
-            onChange={(e: any) => setEditedInvoice({ ...editedInvoice, status: e.target.value })}
-          >
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Delivered">Delivered</MenuItem>
-            <MenuItem value="Shipped">Shipped</MenuItem>
-          </CustomSelect>
-        </Box>
-        <Box textAlign="right">
-          <CustomFormLabel htmlFor="demo-simple-select">Order Date</CustomFormLabel>
-          <Typography variant="body1"> {formattedOrderDate}</Typography>
-        </Box>
-      </Stack>
-      <Divider></Divider>
-      */}
       <Grid container spacing={3} mb={4}>
         <Grid
           size={{

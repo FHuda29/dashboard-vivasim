@@ -154,6 +154,9 @@ export interface OrderListType {
     ar: number;
     sms_internal_reply: string;
     payment_type: string;
+    total_invoice: number;
+    total_base_price: number;
+    profit: number;
   }
 
 
@@ -222,6 +225,46 @@ export interface orderList {
     order_product_price: number;
     order_product_total_price: number;
     package_name: string;
+}
+
+export interface ordersList {
+    order_id: string;
+    order_date: string;
+    product_type: string;
+    order_status: string;
+    customer_name: string;
+    contact_phone: string;
+    contact_wa: string;
+    email_address: string;
+    agent_code: string;
+    agent_name: string;
+    country_name: string;
+    order_quantity: number;
+    total_order: number;
+    total_cost: number;
+    order_product: string;
+    order_country_code: string;
+    order_fup: string;
+    order_quota: string;
+    order_days: number;
+    order_ccid: string;
+    package_id: string;
+    package_name: string;
+}
+
+export interface uploadDetail{
+    seq: never;
+    iccid: string;
+    cobrand_id: string;
+    agent_code: string;
+    in_date: string;
+    out_date: string;
+    status: string;
+    order_id: string;
+    country_id: string;
+    package_id: string;
+    selling_price: number;
+    sim_type: string;
 }
 
 export interface orderEventList {

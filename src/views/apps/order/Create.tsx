@@ -1,24 +1,17 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-//import CreateProductApp from 'src/components/apps/product/Add-product';                                             
 import BlankCard from 'src/components/shared/BlankCard';
 import { Alert, Box, Button, CardContent, Divider, FormControlLabel, Grid2 as Grid, MenuItem, Radio, RadioGroup, Stack, Typography } from '@mui/material';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-//import router from 'src/routes/Router';
 import { useNavigate, useParams } from 'react-router';
-//import { ProductProvider } from 'src/context/ProductContext';
-
 import { numberFormat, orderList, formatDate, generateRandomString, currentDate, generateTrxId, orderEventList } from "src/utils/Utils";
-import axios from 'axios';
-import ApiConfig  from "src/constants/apiConstants";
-import { VisibilityOff, Visibility } from '@mui/icons-material';
-import { text } from 'stream/consumers';
-import { textAlign } from '@mui/system';
-const apiUrl = ApiConfig.apiUrl;
 
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 const BCrumb = [
   {
@@ -40,14 +33,14 @@ const fupPackage = [
 
 
 const quotaPackage = [
-  { id: 0, value: '3000', label: '3Gb' },
-  { id: 1, value: '5000', label: '5Gb' },
-  { id: 2, value: '6000', label: '6Gb' },
-  { id: 3, value: '7000', label: '7Gb' },
-  { id: 4, value: '10000', label: '10Gb' },
-  { id: 5, value: '15000', label: '15Gb' },
-  { id: 6, value: '20000', label: '20Gb' },
-  { id: 7, value: '30000', label: '30Gb' }
+  { id: 0, value: '3Gb', label: '3Gb' },
+  { id: 1, value: '5Gb', label: '5Gb' },
+  { id: 2, value: '6Gb', label: '6Gb' },
+  { id: 3, value: '7Gb', label: '7Gb' },
+  { id: 4, value: '10Gb', label: '10Gb' },
+  { id: 5, value: '15Gb', label: '15Gb' },
+  { id: 6, value: '20Gb', label: '20Gb' },
+  { id: 7, value: '30Gb', label: '30Gb' }
 ]
 
 const daysPackage = [
@@ -128,65 +121,43 @@ const CreateOrder = () => {
     });
   
     useEffect(() => {
-      const data_success_login = localStorage.getItem('data_success_login');
-      if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('data_success_login:', parsedData);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
 
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          //console.log('last_login_time:', parsedData.last_login_time);
-          //console.log('blocked:', parsedData.blocked);
-          setUserName(parsedData.user_name);
-          setUserLevel(parsedData.session_level);
-          setUserLogin(parsedData.session_name);
+            setUserName(decodedToken.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserLogin(decodedToken.session_name);
 
-          //get aget name
-          fetchAgentByCode(parsedData.session_name);
+            //get aget name
+            fetchAgentByCode(decodedToken.session_name);
 
+            
+            const partnerID = decodedToken.session_name.split('-')[0];
+            setUserSession(partnerID);
+
+            //list product
+            fetchProductPartner(partnerID);
+
+            setFormData((prevData: any) => ({
+                ...prevData,
+                cobrand_id: decodedToken.session_name
+            }));
           
-          const partnerID = parsedData.session_name.split('-')[0];
-          setUserSession(partnerID);
-
-          //list product
-          fetchProductPartner(partnerID);
-
-          setFormData((prevData: any) => ({
-            ...prevData,
-            cobrand_id: parsedData.session_name
-          }));
           
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            //fetchAgentListCobrand((parsedData.session_name));
-          }else{
-            //load partner list
-            //fetchPartnerList();
-          }
-      }
+        }else{
+            router('/auth/login');
+        }
+
       
       //list country
       fetchCountryList();
       
-      /*
-      if (products.length > 0) {
-        const lastId = products[products.length - 1].seq;
-        //console.log("lastId : ",lastId);
-        setFormData((prevData: any) => ({
-          ...prevData,
-          seq: lastId + 1,
-        }));
-      } else {
-        setFormData((prevData: any) => ({
-          ...prevData,
-          seq: 1,
-        }));
-      }
-      */  
+       
     }, []);
     
     const fetchAgentByCode = async (agentCode: string) => {
-        let end_point = apiUrl + "agents/code/"+agentCode;
+        let end_point = "agents/code/"+agentCode;
         axios
             .get(end_point)
             .then((response) => {
@@ -198,24 +169,34 @@ const CreateOrder = () => {
                 }));
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchProductPartner = async (cobrand_id: string) => {
-        let end_point = apiUrl + "product/partner/cobrand/"+cobrand_id;
+        let end_point = "product/partner/cobrand/"+cobrand_id;
         axios
             .get(end_point)
             .then((response) => {
                 console.log("list_product_partner : ",response.data);
             })
             .catch((error) => {
-                console.log(error);
+              if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchProductDetail = async (country_code: string,days: number,quota: string) => {
-        let end_point = apiUrl + "product/partner/"+country_code+"/"+days+"/"+quota;
+        let end_point = "product/partner/"+country_code+"/"+days+"/"+quota+"/"+userSession;
         axios
             .get(end_point)
             .then(async (response) => {
@@ -234,6 +215,7 @@ const CreateOrder = () => {
                 const paket_id = response.data[0].package_id;
                 const paket_price = response.data[0].selling_price;
                 const packet_name = response.data[0].package_name;
+                const cobrain_price = response.data[0].cobrain_price;
 
                 //total product_price
                 const total_product_price = formData.quantity * paket_price;
@@ -263,7 +245,7 @@ const CreateOrder = () => {
                 let str_ccid = '';
                 for(let i = 0; i < ccid.length; i++){
                     if(ccid[i] != ""){
-                        str_ccid += ccid[i]+'|';
+                        str_ccid += ccid[i]+',';
                     }else{
                         ccid[i] = '';
                     }
@@ -293,8 +275,11 @@ const CreateOrder = () => {
                     order_ccid: str_ccid,
                     order_qty: formData.quantity,
                     order_product_price: paket_price,
+                    order_cobrain_price: cobrain_price,
                     order_product_total_price: total_product_price,
-                    package_name: packet_name
+                    package_name: packet_name,
+                    cobrand_id: userSession,
+                    order_source: 'Web'
                 }
 
                 console.log("dataOrder : ",dataOrder);
@@ -343,7 +328,12 @@ const CreateOrder = () => {
         console.log("data : ", formData);
         
         //get paket product
-        fetchProductDetail(formData.country,formData.days,formData.fup);
+        if(formData.package_type === "1"){
+            fetchProductDetail(formData.country,formData.days,formData.fup);
+        }else if(formData.package_type === "2"){
+            fetchProductDetail(formData.country,formData.days,formData.quota);
+        }
+        
         
         
         //await addProduct(formData);
@@ -372,21 +362,26 @@ const CreateOrder = () => {
     };
   
     const fetchCountryList = async () => {
-          let end_point = apiUrl + "country";
+          let end_point = "country";
           axios
               .get(end_point)
               .then((response) => {
                   setCountry(response.data);
               })
               .catch((error) => {
-                  console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
               });
     }
 
 
     const addOrder = async (order: orderList) => {
             try {
-                const response = await axios.post(ApiConfig.apiUrl + 'orders', order);
+                const response = await axios.post('orders', order);
                 const addOrder = response.data;
                 //setProducts((prevProduct) => [...prevProduct, addOrder]);
             } catch (error) {
@@ -396,43 +391,13 @@ const CreateOrder = () => {
 
     const addOrderEvent = async (orderEvent: orderEventList) => {
         try {
-            const response = await axios.post(ApiConfig.apiUrl + 'order/event', orderEvent);
+            const response = await axios.post('order/event', orderEvent);
             const addOrderEvent = response.data;
         } catch (error) {
             console.error('Error adding order events :', error);
         }
     };
 
-
-    //const parsedDate = isValid(new Date(formData.date)) ? new Date(formData.date) : new Date();
-    //const formattedOrderDate = format(parsedDate, 'EEEE, MMMM dd, yyyy');
-    
-    /*
-    const fetchPartnerList = async () => {
-        let end_point = apiUrl + "partners";
-        axios
-            .get(end_point)
-            .then((response) => {
-                //console.log(response);
-                setPartners(response.data);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }
-  
-    const fetchAgentListCobrand = async (cobrand_id:string) => {
-        let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
-        axios
-            .get(end_point)
-            .then((response) => {
-              setAgents(response.data);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-  }
-  */
  
   //generate text box
   const totalFields = 30; // Max ICCID fields

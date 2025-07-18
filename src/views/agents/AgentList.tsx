@@ -27,28 +27,19 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-
-import img1 from 'src/assets/images/profile/user-1.jpg';
-import img2 from 'src/assets/images/profile/user-2.jpg';
-import img3 from 'src/assets/images/profile/user-3.jpg';
-import img4 from 'src/assets/images/profile/user-4.jpg';
-import img5 from 'src/assets/images/profile/user-5.jpg';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
 import { Link } from 'react-router';
-
 import { numberFormat, agentList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -123,30 +114,24 @@ const AgentList = () => {
 
     useEffect(() => {
 
-      const data_success_login = localStorage.getItem('data_success_login');
-      if (data_success_login) {
-        const parsedData = JSON.parse(data_success_login);
-        console.log('user_name:', parsedData.user_name);
-        console.log('session_name:', parsedData.session_name);
-        console.log('session_level:', parsedData.session_level);
-        console.log('last_login_time:', parsedData.last_login_time);
-        console.log('blocked:', parsedData.blocked);
-
-        if(parsedData.session_level.toLowerCase() === 'partner'){
-          //const user_login = parsedData.session_name.split('-')[0];
-          fetchAgentListCobrand(parsedData.session_name);
-        }else{
-          //load partner list by HO
-          fetchAgentList();
-        }
+      const token = localStorage.getItem('token');
+      if (token) {
+          const decodedToken:any = jwtDecode(token);
+          if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+            //const user_login = parsedData.session_name.split('-')[0];
+            fetchAgentListCobrand(decodedToken.session_name);
+          }else{
+            //load partner list by HO
+            fetchAgentList();
+          }
       }else{
-        router('/auth/login');
+          router('/auth/login');
       }
     }, []);
 
   //get all product
   const fetchAgentList = async () => {
-    let end_point = apiUrl + "agents";
+    let end_point = "agents";
     axios
         .get(end_point)
         .then((response) => {
@@ -154,19 +139,29 @@ const AgentList = () => {
             setAgents(response.data);
         })
         .catch((error) => {
-            console.log(error);
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+          } else {
+              console.log(error);
+          }
         });
   }
 
   const fetchAgentListCobrand = async (cobrand_id:string) => {
-    let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+    let end_point = "agents/cobrand/"+cobrand_id;
     axios
         .get(end_point)
         .then((response) => {
             setAgents(response.data);
         })
         .catch((error) => {
-            console.log(error);
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+          } else {
+              console.log(error);
+          }
         });
   }
 
@@ -201,7 +196,7 @@ const AgentList = () => {
   return (
     <PageContainer title="Agent" description="this is agent page">
       {/* breadcrumb */}
-      <Breadcrumb title="Agent" items={BCrumb} />
+      {/*<Breadcrumb title="Agent" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="Agent List">
           <Box mb={2}>
@@ -416,7 +411,7 @@ const AgentList = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={19} />
+                    <TableCell colSpan={2} />
                   </TableRow>
                 )}
               </TableBody>
@@ -424,7 +419,7 @@ const AgentList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={19}
+                    colSpan={2}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

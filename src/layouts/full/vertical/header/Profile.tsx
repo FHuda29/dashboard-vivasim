@@ -18,6 +18,7 @@ import { IconMail } from '@tabler/icons-react';
 
 import ProfileImg from 'src/assets/images/profile/user-1.jpg';
 import unlimitedImg from 'src/assets/images/backgrounds/unlimited-bg.png';
+import { jwtDecode } from 'jwt-decode';
 
 
 const Profile = () => {
@@ -27,31 +28,32 @@ const Profile = () => {
       const [userSession, setUserSession] = React.useState('');
   
       useEffect(() => {
-              const data_success_login = localStorage.getItem('data_success_login');
-              if (data_success_login) {
-                  const parsedData = JSON.parse(data_success_login);
-                  console.log('user_name:', parsedData.user_name);
-                  console.log('session_name:', parsedData.session_name);
-                  console.log('session_level:', parsedData.session_level);
-                  console.log('last_login_time:', parsedData.last_login_time);
-                  console.log('blocked:', parsedData.blocked);
-                  
-                  setUserName(parsedData.user_name);
-                  setUserLevel(parsedData.session_level);
-                  setUserSession(parsedData.session_name);
-      
-                  if(parsedData.session_level.toLowerCase() === 'partner'){
-                      const user_login = parsedData.session_name.split('-')[0];
-                  }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-                      
-                  }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
-                      
-                  }else{
-                      
-                  }
-              }else{
-                  //router('/auth/login');
-              }
+             const token = localStorage.getItem('token');
+             if (token) {
+                 const decodedToken:any = jwtDecode(token);
+ 
+                 console.log('user_name:', decodedToken.user_name);
+                 console.log('session_name:', decodedToken.session_name);
+                 console.log('session_level:', decodedToken.session_level);
+                 console.log('last_login_time:', decodedToken.last_login);
+                 console.log('blocked:', decodedToken.blocked);
+                 setUserName(decodedToken.user_name);
+                 setUserLevel(decodedToken.session_level);
+                 setUserSession(decodedToken.session_name);
+
+                 /*
+                 if(decodedToken.session_level.toLowerCase() === 'partner'){
+                     const user_login = decodedToken.session_name.split('-')[0];
+                 }else if(decodedToken.session_level.toLowerCase() === 'agent-manager'){
+                     
+                 }else if(decodedToken.session_level.toLowerCase() === 'agent-admin'){
+                     
+                 }else{
+                     
+                 }*/
+             }else{
+                 //router('/auth/login');
+             }
   }, []);
 
   const [anchorEl2, setAnchorEl2] = useState(null);

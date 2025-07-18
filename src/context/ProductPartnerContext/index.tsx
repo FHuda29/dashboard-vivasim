@@ -1,9 +1,8 @@
 'use client'
 import React, { createContext, useEffect, useState } from 'react';
 import { PartnerProductList } from 'src/utils/Utils';
-import ApiConfig  from "src/constants/apiConstants";
-
-import axios from '../../utils/axios';
+//api
+import axios from 'src/api/axios';
 
 interface ProductPartnerContextType {
     products: PartnerProductList[];
@@ -25,7 +24,7 @@ export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = (
         const fetchData = async () => {
             try {
                 //const response = await axios.get('/api/data/invoicedata');
-                const response = await axios.get(ApiConfig.apiUrl + 'product/partner');
+                const response = await axios.get('product/partner');
                 console.log("edit product partner: ",response.data);
                 setProducts(response.data);
                 setLoading(false);
@@ -52,7 +51,7 @@ export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = (
 
     const addProduct = async (newProduct: PartnerProductList) => {
         try {
-            const masterProduct = await axios.get(ApiConfig.apiUrl + 'products/package/'+newProduct.package_id);
+            const masterProduct = await axios.get('products/package/'+newProduct.package_id);
             console.log("master product: ",masterProduct.data);
 
             //add partner product
@@ -62,7 +61,7 @@ export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = (
             newProduct.quota = masterProduct.data.quota;
             newProduct.status = masterProduct.data.status;
 
-            const response = await axios.post(ApiConfig.apiUrl + 'product/partner', newProduct);
+            const response = await axios.post('product/partner', newProduct);
             const addedProduct = response.data;
             setProducts((prevProduct) => [...prevProduct, addedProduct]);
         } catch (error) {
@@ -74,7 +73,7 @@ export const ProductPartnerProvider: React.FC<{ children: React.ReactNode }> = (
     const updateProduct = async (updatedProduct: PartnerProductList) => {
         try {
             const seq = updatedProduct.seq;
-            const response = await axios.put(ApiConfig.apiUrl + 'product/partner/salling/'+seq, updatedProduct);
+            const response = await axios.put('product/partner/salling/'+seq, updatedProduct);
             const updated = response.data;
             setProducts((prevProducts) =>
                 prevProducts.map((products) => (products.seq === updated.seq ? updated : products))

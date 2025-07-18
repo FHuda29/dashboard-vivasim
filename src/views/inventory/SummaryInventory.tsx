@@ -34,15 +34,15 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react';
 import { numberFormat, invSummaryAgent, formatDate } from "src/utils/Utils";
-
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
+
+
 
 interface TablePaginationActionsProps {
   count: number;
@@ -118,68 +118,86 @@ const SummaryInventory = () => {
     const [userSession, setUserSession] = React.useState('');
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-            const parsedData = JSON.parse(data_success_login);
-            console.log('user_name:', parsedData.user_name);
-            console.log('session_name:', parsedData.session_name);
-            console.log('session_level:', parsedData.session_level);
-            console.log('last_login_time:', parsedData.last_login_time);
-            console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
+            console.log('user_name:', decodedToken.user_name);
+            console.log('session_name:', decodedToken.session_name);
+            console.log('session_level:', decodedToken.session_level);
+            console.log('last_login_time:', decodedToken.last_login_time);
+            console.log('blocked:', decodedToken.blocked);
             
-            setUserName(parsedData.user_name);
-            setUserLevel(parsedData.session_level);
-            setUserSession(parsedData.session_name);
+            setUserName(decodedToken.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserSession(decodedToken.session_name);
 
-            if(parsedData.session_level.toLowerCase() === 'partner'){
-                const user_login = parsedData.session_name.split('-')[0];
+            if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+                const user_login = decodedToken.session_name.split('-')[0];
                 fetchInventorySummaryPartner(user_login);
-            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-                fetchInventorySummary(parsedData.session_name);
-            }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
-                fetchInventorySummary(parsedData.session_name);    
+            }else if(decodedToken.session_level.toLowerCase() === 'agent-manager'){
+                fetchInventorySummary(decodedToken.session_name);
+            }else if(decodedToken.session_level.toLowerCase() === 'agent-admin'){
+                fetchInventorySummary(decodedToken.session_name);    
             }else{
                 fetchInventorySummaryAll();
             }
         }else{
             router('/auth/login');
-        }
+        }    
     }, []);
 
     //inventory summary
     const fetchInventorySummary = async (agent_code:string) => {
-        let end_point = apiUrl + "inventory/summary/agent/"+agent_code;
+        let end_point = "inventory/summary/agent/"+agent_code;
         axios
             .get(end_point)
             .then((response) => {
                 setInventorySummary(response.data);
             })
             .catch((error) => {
-                console.log(error);
+               //console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchInventorySummaryPartner = async (partner_code:string) => {
-        let end_point = apiUrl + "inventory/summary/partner/"+partner_code;
+        let end_point = "inventory/summary/partner/"+partner_code;
         axios
             .get(end_point)
             .then((response) => {
                 setInventorySummary(response.data);
             })
             .catch((error) => {
-                console.log(error);
+              //console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchInventorySummaryAll = async () => {
-        let end_point = apiUrl + "inventory/summary/all"
+        let end_point = "inventory/summary/all"
         axios
             .get(end_point)
             .then((response) => {
                 setInventorySummary(response.data);
             })
             .catch((error) => {
-                console.log(error);
+                //console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
@@ -215,7 +233,7 @@ const SummaryInventory = () => {
 
     return (
         <PageContainer title="Inventory Summary" description="this is inventory summary page">
-            <Breadcrumb title="Inventory Summary" items={BCrumb} />
+            {/*<Breadcrumb title="Inventory Summary" items={BCrumb} />*/}
             <ParentCard title="Summary List">
                 <BlankCard>
                     <TableContainer>
@@ -242,7 +260,7 @@ const SummaryInventory = () => {
                                     <TableCell>
                                         <Typography variant="subtitle2">Status</Typography>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell align="center">
                                         <Typography variant="subtitle2">Quantity</Typography>
                                     </TableCell>
                                 </TableRow>
@@ -287,9 +305,9 @@ const SummaryInventory = () => {
                                             />
                                         </Typography>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell align="right">
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.quantity}  
+                                            {numberFormat(row.quantity)}  
                                         </Typography>
                                     </TableCell>
                                     
@@ -297,9 +315,9 @@ const SummaryInventory = () => {
                                 ))}
                                 <TableRow style={{ height: 53 * emptyRows }}>
                                     <TableCell colSpan={5}><Typography variant="subtitle2" fontSize={16} fontWeight="600">Total</Typography></TableCell>
-                                    <TableCell>
+                                    <TableCell align="right">
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="600">
-                                            {sumTotalRow()}
+                                            {numberFormat(sumTotalRow())}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>

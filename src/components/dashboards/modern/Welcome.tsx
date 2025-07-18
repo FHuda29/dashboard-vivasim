@@ -3,13 +3,15 @@ import { Box, CardContent, Chip, Grid2 as Grid, Table, TableBody, TableCell, Tab
 //api
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 import { numberFormat, invSummaryAgent, formatDate } from "src/utils/Utils";
 import page from 'src/components/react-tables/basic/page';
+import { jwtDecode } from 'jwt-decode';
 
-const apiUrl = ApiConfig.apiUrl;
+//const apiUrl = ApiConfig.apiUrl;
+import axios from 'src/api/axios';
 
 const WelcomeHome = () => {
     const router = useNavigate();
@@ -19,68 +21,79 @@ const WelcomeHome = () => {
     
 
     useEffect(() => {
-            const data_success_login = localStorage.getItem('data_success_login');
-            if (data_success_login) {
-                const parsedData = JSON.parse(data_success_login);
-                console.log('user_name:', parsedData.user_name);
-                console.log('session_name:', parsedData.session_name);
-                console.log('session_level:', parsedData.session_level);
-                console.log('last_login_time:', parsedData.last_login_time);
-                console.log('blocked:', parsedData.blocked);
-                
-                setUserName(parsedData.user_name);
-                setUserLevel(parsedData.session_level);
-                setUserSession(parsedData.session_name);
+            const token = localStorage.getItem('token');
+            if (token) {
+                const decoded:any = jwtDecode(token);
+                console.log("decoded: ",decoded);
+
+                setUserName(decoded.user_name);
+                setUserLevel(decoded.session_level);
+                setUserSession(decoded.session_name);
     
-                if(parsedData.session_level.toLowerCase() === 'partner'){
-                    const user_login = parsedData.session_name.split('-')[0];
+                if(decoded.session_level.toLowerCase() === 'partner' || decoded.session_level.toLowerCase() === 'partner-admin'){
+                    const user_login = decoded.session_name.split('-')[0];
                     fetchInventorySummaryPartner(user_login);
-                }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-                    fetchInventorySummaryAgent(parsedData.session_name);
-                }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
-                    fetchInventorySummaryAgent(parsedData.session_name);    
+                }else if(decoded.session_level.toLowerCase() === 'agent-manager'){
+                    fetchInventorySummaryAgent(decoded.session_name);
+                }else if(decoded.session_level.toLowerCase() === 'agent-admin'){
+                    fetchInventorySummaryAgent(decoded.session_name);    
                 }else{
                     fetchInventorySummaryAll();
                 }
             }else{
                 router('/auth/login');
-            }
+            }   
     }, []);
 
     //inventory summary
     const fetchInventorySummaryAgent = async (agent_code:string) => {
-        let end_point = apiUrl + "inventory/summary/agent/"+agent_code;
+        let end_point = "inventory/summary/agent/"+agent_code;
         axios
             .get(end_point)
             .then((response) => {
                 setInventorySummary(response.data);
             })
             .catch((error) => {
-                console.log(error);
+               if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchInventorySummaryPartner = async (partner_code:string) => {
-            let end_point = apiUrl + "inventory/summary/partner/"+partner_code;
+            let end_point = "inventory/summary/partner/"+partner_code;
             axios
                 .get(end_point)
                 .then((response) => {
                     setInventorySummary(response.data);
                 })
                 .catch((error) => {
+                    if (error.response && error.response.status === 403 || error.response.status === 401) {
+                        // Token expired → redirect ke login
+                        router('/auth/login');
+                    } else {
                     console.log(error);
+                    }
                 });
         }
     
     const fetchInventorySummaryAll = async () => {
-        let end_point = apiUrl + "inventory/summary/all"
+        let end_point = "inventory/summary/all"
         axios
                 .get(end_point)
                 .then((response) => {
                     setInventorySummary(response.data);
                 })
                 .catch((error) => {
+                   if (error.response && error.response.status === 403 || error.response.status === 401) {
+                        // Token expired → redirect ke login
+                        router('/auth/login');
+                    } else {
                     console.log(error);
+                    }
                 });
     }
 
@@ -145,7 +158,7 @@ const WelcomeHome = () => {
                                     <TableCell>
                                         <Typography variant="subtitle2">Status</Typography>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell align="center">
                                         <Typography variant="subtitle2">Quantity</Typography>
                                     </TableCell>
                                 </TableRow>
@@ -190,19 +203,19 @@ const WelcomeHome = () => {
                                             />
                                         </Typography>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell align="right">
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.quantity}  
+                                            {numberFormat(row.quantity)}  
                                         </Typography>
                                     </TableCell>
                                     
                                 </TableRow>
                                 ))}
-                                <TableRow style={{ height: 53 * emptyRows }}>
+                                <TableRow style={{ height: 53 * emptyRows }} sx={{ backgroundColor: '#f5f5f5' }}>
                                     <TableCell colSpan={5}><Typography variant="subtitle2" fontSize={16} fontWeight="600">Total</Typography></TableCell>
-                                    <TableCell>
+                                    <TableCell align="right">
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="600">
-                                            {sumTotalRow()}
+                                            {numberFormat(sumTotalRow())}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>

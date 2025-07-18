@@ -27,12 +27,10 @@ import { useNavigate } from 'react-router';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 //import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import axios from 'axios';
-import ApiConfig  from "src/constants/apiConstants";
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 import { join } from 'path';
-const apiUrl = ApiConfig.apiUrl;
+import { jwtDecode } from 'jwt-decode';
 
 const CreatePartner = () => {
   //const [userLevel, setUserLevel] = React.useState('');
@@ -80,27 +78,18 @@ const CreatePartner = () => {
   };
 
   useEffect(() => {
-    const data_success_login = localStorage.getItem('data_success_login');
-    if (data_success_login) {
-        const parsedData = JSON.parse(data_success_login);
-        //console.log('user_name:', parsedData.user_name);
-        console.log('session_name:', parsedData.session_name);
-        console.log('session_level:', parsedData.session_level);
-        //console.log('last_login_time:', parsedData.last_login_time);
-        //console.log('blocked:', parsedData.blocked);
-        //setUserLevel(parsedData.session_level);
-        //setUserSession(parsedData.session_name);
+    const token = localStorage.getItem('token');
+    if (token) {
+        const decodedToken:any = jwtDecode(token);
+        console.log('session_name:', decodedToken.session_name);
+        console.log('session_level:', decodedToken.session_level);
         setFormData((prevData: any) => ({
           ...prevData,
-          cobrand_id: parsedData.session_name
+          cobrand_id: decodedToken.session_name
         }));
+
     }
-    //list partner
-    //fetchPartnerList();
-
-    //list levels
-    //fetchLevelList();
-
+    
     if (agents.length > 0) {
       const lastId = agents[agents.length - 1].seq;
       setFormData((prevData: any) => ({

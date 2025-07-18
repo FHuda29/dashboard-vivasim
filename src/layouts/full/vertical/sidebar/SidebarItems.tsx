@@ -15,11 +15,13 @@ import NavCollapse from './NavCollapse';
 import NavGroup from './NavGroup/NavGroup';
 import { AppState } from 'src/store/Store';
 import { any } from 'prop-types';
+import { jwtDecode } from 'jwt-decode';
 
 const SidebarItems = () => {
   const [levelUser, setLevelUser] = React.useState('');
 
   useEffect(() => {
+    /*
     const data_success_login = localStorage.getItem('data_success_login');
     if (data_success_login) {
       const parsedData = JSON.parse(data_success_login);
@@ -31,6 +33,19 @@ const SidebarItems = () => {
 
       setLevelUser(parsedData.session_level);
     }
+    */
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decodedToken:any = jwtDecode(token);
+
+      console.log('user_name:', decodedToken.user_name);
+      console.log('session_name:', decodedToken.session_name);
+      console.log('session_level:', decodedToken.session_level);
+      console.log('last_login_time:', decodedToken.last_login);
+      console.log('blocked:', decodedToken.blocked);
+      setLevelUser(decodedToken.session_level);
+    }  
   }, []);
 
   const { pathname } = useLocation();
@@ -43,7 +58,7 @@ const SidebarItems = () => {
 
   return (
     <Box sx={{ px: 3 }}>
-    {levelUser.toLowerCase() === 'partner' ? (
+    {levelUser.toLowerCase() === 'partner' || levelUser.toLowerCase() === 'partner-admin'? (
       <List sx={{ pt: 0 }} className="sidebarNav">   
       {MenuItemsPartner.map((item) => {
         // {/********SubHeader**********/}
@@ -74,7 +89,7 @@ const SidebarItems = () => {
       })}
     </List>
     ):(
-      levelUser.toLowerCase() === 'agent-manager' ? (
+      levelUser.toLowerCase() === 'agent-manager' || levelUser.toLowerCase() === 'agent-admin'? (
         <List sx={{ pt: 0 }} className="sidebarNav">   
       {MenuItemsAgent.map((item) => {
         // {/********SubHeader**********/}

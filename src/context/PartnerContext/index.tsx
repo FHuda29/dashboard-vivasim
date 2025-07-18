@@ -1,9 +1,8 @@
 'use client'
 import React, { createContext, useEffect, useState } from 'react';
 import { partnerList } from 'src/utils/Utils';
-import ApiConfig  from "src/constants/apiConstants";
-
-import axios from '../../utils/axios';
+//api
+import axios from 'src/api/axios';
 
 interface PartnerContextType {
     partner: partnerList[];
@@ -25,7 +24,7 @@ export const PartnerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(ApiConfig.apiUrl + 'partners');
+                const response = await axios.get('partners');
                 setPartners(response.data);
                 setLoading(false);
             } catch (error) {
@@ -41,7 +40,7 @@ export const PartnerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const deleteUser = async (seq: number) => {
         try {
 
-            await axios.delete(ApiConfig.apiUrl + 'partners', { data: { seq: seq } });
+            await axios.delete('partners', { data: { seq: seq } });
             setPartners((prevUsers) => prevUsers.filter((users) => users.seq !== seq));
         } catch (error) {
             console.error('Error deleting products:', error);
@@ -53,7 +52,7 @@ export const PartnerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
             console.log("newUser: ",newUser);
             console.log("json newUser: ",JSON.stringify(newUser));
-            const response = await axios.post(ApiConfig.apiUrl + 'partners', newUser);
+            const response = await axios.post('partners', newUser);
             const addedUser = response.data;
             setPartners((prevUser) => [...prevUser, addedUser]);
         } catch (error) {

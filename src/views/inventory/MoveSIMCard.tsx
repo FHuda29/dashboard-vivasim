@@ -27,14 +27,14 @@ import CustomTextField from 'src/components/forms/theme-elements/CustomTextField
 import { numberFormat, partnerList, formatDate } from "src/utils/Utils";
 import { useNavigate } from 'react-router';
 
-//api
-import ApiConfig  from "src/constants/apiConstants";
+
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { IconPlus, IconRefresh } from '@tabler/icons-react';
 
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
-const apiUrl = ApiConfig.apiUrl;
 const BCrumb = [
     {
       to: '/',
@@ -57,34 +57,33 @@ const MoveSIMCard = () => {
     const router = useNavigate();
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          console.log('last_login_time:', parsedData.last_login_time);
-          console.log('blocked:', parsedData.blocked);
-          
-          setUserLevel(parsedData.session_level);
-          setUserSession(parsedData.session_name);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
 
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            //const user_login = parsedData.session_name.split('-')[0];
-            //fetchAgentListCobrand(user_login);
-            fetchAgentListCobrand((parsedData.session_name));
-            setTittle('Move Simcard to Agent');
-          }else{
-            //load inventory
-            fetchPartnerList();
-            setTittle('Move Simcard to Partner');
-          }
+            console.log('user_name:', decodedToken.user_name);
+            console.log('session_name:', decodedToken.session_name);
+            console.log('session_level:', decodedToken.session_level);
+            console.log('last_login_time:', decodedToken.last_login_time);
+            console.log('blocked:', decodedToken.blocked);
+            
+            setUserLevel(decodedToken.session_level);
+            setUserSession(decodedToken.session_name);
+
+            if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+                //const user_login = parsedData.session_name.split('-')[0];
+                //fetchAgentListCobrand(user_login);
+                fetchAgentListCobrand((decodedToken.session_name));
+                setTittle('Move Simcard to Agent');
+            }else{
+                //load inventory
+                fetchPartnerList();
+                setTittle('Move Simcard to Partner');
+            }
         }else{
-          router('/auth/login');
-        }
+            router('/auth/login');
+        }    
 
-        //fetchPartnerList();
-        //fetchProductMaster();
     }, []);
 
     const [partners, setPartners] = React.useState([]);
@@ -103,26 +102,37 @@ const MoveSIMCard = () => {
 
     //get partner
     const fetchPartnerList = async () => {
-        let end_point = apiUrl + "partners";
+        let end_point = "partners";
         axios
             .get(end_point)
             .then((response) => {
                 setPartners(response.data);
             })
             .catch((error) => {
-                console.log(error);
+                //console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchAgentListCobrand = async (cobrand_id:string) => {
-        let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+        let end_point = "agents/cobrand/"+cobrand_id;
         axios
             .get(end_point)
             .then((response) => {
                 setAgents(response.data);
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
@@ -154,7 +164,7 @@ const MoveSIMCard = () => {
         let cobrand_id = '';
         let agent_code = '';
 
-        if(userLevel.toLowerCase() === 'partner'){
+        if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin'){
             cobrand_id = userSession.split('-')[0];
             agent_code = agentCode;
         }else{
@@ -162,7 +172,7 @@ const MoveSIMCard = () => {
             agent_code = agentCode;
         }
         
-        let end_point = apiUrl + "inventory/ccid?ccidstart="+ccidStart+"&ccidend="+ccidEnd+"&cobrand_id="+cobrand_id+"&agent_code="+agent_code;
+        let end_point = "inventory/ccid?ccidstart="+ccidStart+"&ccidend="+ccidEnd+"&cobrand_id="+cobrand_id+"&agent_code="+agent_code;
         //console.log(end_point);
 
         axios
@@ -189,7 +199,12 @@ const MoveSIMCard = () => {
                 }
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
         
     };
@@ -201,12 +216,12 @@ const MoveSIMCard = () => {
 
     return (
         <PageContainer title="Inventory" description="this is inventory page">
-            <Breadcrumb title="Inventory" items={BCrumb} />
+            {/*<Breadcrumb title="Inventory" items={BCrumb} />8*/}
             <ParentCard title={tittle}>
                 <Box mt={2}>
                     <Grid size={{ xs: 12 }}>
                         <Grid container spacing={2}>
-                            {userLevel.toLowerCase() === 'partner' ? (
+                            {userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin' ? (
                                 <Grid size={{ xs: 3 }}>
                                     <Typography variant="subtitle1" mt={1} mb={1}>
                                         Move to Agent 

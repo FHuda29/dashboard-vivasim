@@ -34,15 +34,13 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react';
 import { numberFormat, orderEventList, formatDate } from "src/utils/Utils";
-
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -119,25 +117,25 @@ const OrderEvent = () => {
     const [userSession, setUserSession] = React.useState('');
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-            const parsedData = JSON.parse(data_success_login);
-            console.log('user_name:', parsedData.user_name);
-            console.log('session_name:', parsedData.session_name);
-            console.log('session_level:', parsedData.session_level);
-            console.log('last_login_time:', parsedData.last_login_time);
-            console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
+
+            console.log('user_name:', decodedToken.user_name);
+            console.log('session_name:', decodedToken.session_name);
+            console.log('session_level:', decodedToken.session_level);
+            console.log('last_login_time:', decodedToken.last_login_time);
+            console.log('blocked:', decodedToken.blocked);
             
-            setUserName(parsedData.user_name);
-            setUserLevel(parsedData.session_level);
-            setUserSession(parsedData.session_name);
+            setUserName(decodedToken.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserSession(decodedToken.session_name);
 
             fetchOrderEvent(order_id);
 
-            if(parsedData.session_level.toLowerCase() === 'partner'){
-                const user_login = parsedData.session_name.split('-')[0];
-                
-            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+            if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+                const user_login = decodedToken.session_name.split('-')[0];
+            }else if(decodedToken.session_level.toLowerCase() === 'agent-manager'){
                 
             }else{
                 
@@ -145,11 +143,12 @@ const OrderEvent = () => {
         }else{
             router('/auth/login');
         }
+        
     }, []);
 
     //order list
     const fetchOrderEvent = async (order_id:string) => {
-        let end_point = apiUrl + "order/event/id/"+order_id;
+        let end_point = "order/event/id/"+order_id;
         axios
             .get(end_point)
             .then((response) => {
@@ -157,7 +156,12 @@ const OrderEvent = () => {
                 setOrderEvent(response.data);
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
@@ -186,7 +190,7 @@ const OrderEvent = () => {
 
     return (
         <PageContainer title="Order History" description="this is order history page">
-            <Breadcrumb title="Order History" items={BCrumb} />
+            {/*<Breadcrumb title="Order History" items={BCrumb} />*/}
             <ParentCard title="History List">
                 <BlankCard>
                     <TableContainer>

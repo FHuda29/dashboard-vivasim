@@ -22,7 +22,8 @@ import {
   IconAperture,
   IconLayout,
   IconAppWindow,
-  IconFileCheck
+  IconFileCheck,
+  IconUpload
 } from '@tabler/icons-react';
 
 const MenuitemsCS: MenuitemsType[] = [
@@ -68,6 +69,20 @@ const MenuitemsCS: MenuitemsType[] = [
             title: 'Order List',
             icon: IconPoint,
             href: '/order/list',
+        },
+    ],
+  },
+  {
+    id: uniqueId(),
+    title: 'Simcard',
+    icon: IconUpload,
+    href: '/simcard/upload',
+    children: [
+        {
+            id: uniqueId(),
+            title: 'Upload Simcard',
+            icon: IconPoint,
+            href: '/simcard/upload',
         },
     ],
   },

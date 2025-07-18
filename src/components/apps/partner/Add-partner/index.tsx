@@ -4,17 +4,7 @@ import { PartnerContext } from 'src/context/PartnerContext';
 import {
   Alert,
   Button,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Typography,
-  IconButton,
-  Tooltip,
   Box,
   Stack,
   Divider,
@@ -22,16 +12,9 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { useNavigate } from 'react-router';
-//import { format, isValid } from 'date-fns';
-//import { IconPlus, IconSquareRoundedPlus, IconTrash } from '@tabler/icons-react';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
-//import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import axios from 'axios';
-import ApiConfig  from "src/constants/apiConstants";
-import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
-import { VisibilityOff, Visibility } from '@mui/icons-material';
-const apiUrl = ApiConfig.apiUrl;
+
 
 const CreatePartner = () => {
   const { addPartner, partners } = useContext(PartnerContext);

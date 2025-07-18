@@ -36,16 +36,14 @@ import PageContainer from 'src/components/container/PageContainer';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
 import { Link } from 'react-router';
-
 import { numberFormat, InventoryList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconEye, IconHistory, IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -120,23 +118,38 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectAll, setSelectAll] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const [userLogin, setUserLogin] = React.useState("");
+  const [userLevel, setUserLevel] = React.useState("");
+  const [userSession, setUserSession] = React.useState("");
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          console.log('last_login_time:', parsedData.last_login_time);
-          console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decodedToken:any = jwtDecode(token);
+          
+          //console.log(decodedToken);
+          setUserLogin(decodedToken.user_name);
+          setUserSession(decodedToken.session_name);
+          setUserLevel(decodedToken.session_level);
 
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            const user_login = parsedData.session_name.split('-')[0];
+          console.log('user_name:', decodedToken.user_name);
+          setUserLogin(decodedToken.user_name);
+
+          console.log('session_name:', decodedToken.session_name);
+          setUserSession(decodedToken.session_name);
+
+          console.log('session_level:', decodedToken.session_level);
+          setUserLevel(decodedToken.session_level);
+
+          console.log('last_login_time:', decodedToken.last_login_time);
+          console.log('blocked:', decodedToken.blocked);
+
+          if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+            const user_login = decodedToken.session_name.split('-')[0];
             fetchInventoryByUser(user_login);
             //fetchInventoryByUser((parsedData.session_name));
-          }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-            fetchInventoryByAgent((parsedData.session_name));  
+          }else if(decodedToken.session_level.toLowerCase() === 'agent-manager'){
+            fetchInventoryByAgent((decodedToken.session_name));  
           }else{
             //load inventory
             fetchInventorylist();
@@ -148,7 +161,7 @@ const Inventory = () => {
 
   //get all product
   const fetchInventorylist = async () => {
-    let end_point = apiUrl + "inventory";
+    let end_point = "inventory";
     axios
         .get(end_point)
         .then((response) => {
@@ -156,31 +169,46 @@ const Inventory = () => {
             setProductInventory(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
   const fetchInventoryByUser = async (user_login:string) => {
-    let end_point = apiUrl + "inventory/cobrand/"+user_login;
+    let end_point = "inventory/cobrand/"+user_login;
     axios
         .get(end_point)
         .then((response) => {
             setProductInventory(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
   const fetchInventoryByAgent = async (user_login:string) => {
-    let end_point = apiUrl + "inventory/agent/"+user_login;
+    let end_point = "inventory/agent/"+user_login;
     axios
         .get(end_point)
         .then((response) => {
             setProductInventory(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
@@ -215,14 +243,25 @@ const Inventory = () => {
         
         const strtValue = event.target.value;
         if(strtValue.length !== 0){
-            let end_point = apiUrl + "inventory/search?param="+strtValue;
+            let end_point = '';
+            if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin'){
+              end_point = end_point + "inventory/search/cobrand/"+userSession+"?param="+strtValue;
+            }else{
+              end_point = end_point + "inventory/search?param="+strtValue;
+            }
+            //let end_point = apiUrl + "inventory/search?param="+strtValue;
             axios
                 .get(end_point)
                 .then((response) => {
                   setProductInventory(response.data);
                 })
                 .catch((error) => {
+                  if (error.response && error.response.status === 403) {
+                      // Token expired → redirect ke login
+                      router('/auth/login');
+                  } else {
                     console.log(error);
+                  }
                 });
         }else{
           fetchInventorylist();
@@ -240,7 +279,7 @@ const Inventory = () => {
   return (
     <PageContainer title="Inventory" description="this is inventory page">
       {/* breadcrumb */}
-      <Breadcrumb title="Inventory" items={BCrumb} />
+      {/*<Breadcrumb title="Inventory" items={BCrumb} />/*}
       {/* end breadcrumb */}
       <ParentCard title="Inventory List">
           <Box mb={2}>
@@ -416,7 +455,7 @@ const Inventory = () => {
                   ).map((row, index) => (
                     <TableRow key={index}>
                       <TableCell>
-                        <Typography variant="caption">{index+1}</Typography>
+                        <Typography variant="caption">{page * rowsPerPage + index + 1}</Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="caption">{row.iccid}</Typography>
@@ -484,7 +523,7 @@ const Inventory = () => {
 
                   {emptyRows > 0 && (
                     <TableRow style={{ height: 53 * emptyRows }}>
-                      <TableCell colSpan={10} />
+                      <TableCell colSpan={2} />
                     </TableRow>
                   )}
                 </TableBody>
@@ -492,7 +531,7 @@ const Inventory = () => {
                   <TableRow>
                     <TablePagination
                       rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                      colSpan={10}
+                      colSpan={2}
                       count={rows.length}
                       rowsPerPage={rowsPerPage}
                       page={page}

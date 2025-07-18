@@ -23,8 +23,10 @@ import AuthSocialButtons from './AuthSocialButtons';
 //api
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
-const apiUrl = ApiConfig.apiUrl;
+//import axios from 'axios';
+//const apiUrl = ApiConfig.apiUrl;
+
+import axios from 'src/api/axios';
 
 const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const navigate = useNavigate();
@@ -41,8 +43,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
   const handleLogin = () => {
     console.log("Login: ",txtEmail,txtPassword); 
-    axios
-      .post(apiUrl + "users/login", {
+    axios.post("users/login", {
         username: txtEmail,
         password: txtPassword,
       })
@@ -58,7 +59,8 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
           console.log("Login Response: ", resData);
           //localStorage.setItem(ACCESS_TOKEN_NAME, response.access_token);
           //<Navigate to="/dashboards/modern" />
-          localStorage.setItem("data_success_login", JSON.stringify(resData));
+          //localStorage.setItem("data_success_login", JSON.stringify(resData));
+          localStorage.setItem('token', res.data.token);
           //window.location.href = "/dashboards/modern";
           navigate("/dashboard");
         }
@@ -115,6 +117,11 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
           fullWidth
           value={txtPassword}
           onChange={handleTxtPassword}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleLogin();
+            }
+          }}
            />
       </Box>
       <Stack justifyContent="space-between" direction="row" alignItems="center" my={2}>

@@ -1,0 +1,1 @@
+import{by as r}from"./index-bBoaL7NX.js";import{A as o}from"./apiConstants-C71iLEz3.js";const a=o.apiUrl,s=r.create({baseURL:a});s.interceptors.request.use(e=>{const t=localStorage.getItem("token");return t&&(e.headers.Authorization=`Bearer ${t}`),e});export{s as i};

@@ -28,21 +28,18 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
-import { Link } from 'react-router';
-
+import { Link, useNavigate } from 'react-router';
 import { numberFormat, levelList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconAccessible, IconKey, IconRowRemove, IconSearch } from '@tabler/icons-react';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -113,6 +110,7 @@ const BCrumb = [
 ];
 
 const UserLevel = () => {
+    const router = useNavigate();
     useEffect(() => {
         //load user list
         fetchUserLevel();
@@ -121,7 +119,7 @@ const UserLevel = () => {
 
   //get all product
   const fetchUserLevel = async () => {
-    let end_point = apiUrl + "levels";
+    let end_point = "levels";
     axios
         .get(end_point)
         .then((response) => {
@@ -129,7 +127,12 @@ const UserLevel = () => {
             setLevels(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
@@ -140,14 +143,19 @@ const UserLevel = () => {
         
         const strtValue = event.target.value;
         if(strtValue.length !== 0){
-            let end_point = apiUrl + "levels/search?param="+strtValue;
+            let end_point = "levels/search?param="+strtValue;
             axios
                 .get(end_point)
                 .then((response) => {
                     setLevels(response.data);
                 })
                 .catch((error) => {
+                  if (error.response && error.response.status === 403 || error.response.status === 401) {
+                      // Token expired → redirect ke login
+                      router('/auth/login');
+                  } else {
                     console.log(error);
+                  }
                 });
         }else{
             fetchUserLevel();
@@ -183,7 +191,7 @@ const UserLevel = () => {
   return (
     <PageContainer title="Users Level" description="this is users level page">
       {/* breadcrumb */}
-      <Breadcrumb title="Users Level" items={BCrumb} />
+      {/*<Breadcrumb title="Users Level" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="Level List">
           <Box mb={2}>

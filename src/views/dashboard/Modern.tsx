@@ -18,6 +18,7 @@ import WeeklyStats from 'src/components/dashboards/modern/WeeklyStats';
 import TopPerformers from 'src/components/dashboards/modern/TopPerformers';
 import Welcome from 'src/layouts/full/shared/welcome/Welcome';
 import { useNavigate } from 'react-router';
+import { jwtDecode } from 'jwt-decode';
 
 //api
 import ApiConfig  from "src/constants/apiConstants";
@@ -33,41 +34,46 @@ const Modern = () => {
   const [titleDashboard, setTitleDashboard] = React.useState('');
 
   useEffect(() => {
-    //data_success_login
-    const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-            const parsedData = JSON.parse(data_success_login);
-            console.log('user_name:', parsedData.user_name);
-            console.log('session_name:', parsedData.session_name);
-            console.log('session_level:', parsedData.session_level);
-            console.log('last_login_time:', parsedData.last_login_time);
-            console.log('blocked:', parsedData.blocked);
-            
-            setUserName(parsedData.user_name);
-            setUserLevel(parsedData.session_level);
-            setUserSession(parsedData.session_name);
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+              const decoded:any = jwtDecode(token);
+              console.log("decoded: ",decoded);
 
-            if(parsedData.session_level.toLowerCase() === 'partner'){
+              console.log('user_name:', decoded.user_name);
+              console.log('session_name:', decoded.session_name);
+              console.log('session_level:', decoded.session_level);
+              console.log('last_login_time:', decoded.last_login_time);
+              console.log('blocked:', decoded.blocked);
+              
+              setUserName(decoded.user_name);
+              setUserLevel(decoded.session_level);
+              setUserSession(decoded.session_name);
+
+              if(decoded.session_level.toLowerCase() === 'partner' || decoded.session_level.toLowerCase() === 'partner-admin'){
                 setTitleDashboard('Partner');
-                const user_login = parsedData.session_name.split('-')[0];
+                const user_login = decoded.session_name.split('-')[0];
                 setIsPartner(true);
                 setIsAgent(false);
-            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+              }else if(decoded.session_level.toLowerCase() === 'agent-manager'){
                 setTitleDashboard('Agent Manager');
                 setIsPartner(false);
                 setIsAgent(true);
-            }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
+              }else if(decoded.session_level.toLowerCase() === 'agent-admin'){
                 setTitleDashboard('Agent Admin');
                 setIsPartner(false);
                 setIsAgent(true);
-            }else{
+              }else{
                 setTitleDashboard('Head Office');
                 setIsPartner(false);
                 setIsAgent(false);
+              }
+            } catch (error) {
+              console.error("Invalid token:", error);
             }
         }else{
             router('/auth/login');
-        }
+        }    
   }, []);
 
   return (
@@ -90,22 +96,34 @@ const Modern = () => {
               <WelcomeHome />
             </Grid>
           ):(
-            <>
-            <Grid
-              size={{
-                xs: 12,
-                lg: 12
-              }}>
-              <TopCards />
-            </Grid>
-            <Grid
-              size={{
-                xs: 12,
-                lg: 12
-              }}>
-              <WelcomeHome />
-            </Grid>
-            </> 
+            isPartner ? (
+              <>
+              <Grid
+                size={{
+                  xs: 12,
+                  lg: 12
+                }}>
+                <WelcomeHome />
+              </Grid>
+              </>
+            ):(
+              <>
+              <Grid
+                size={{
+                  xs: 12,
+                  lg: 12
+                }}>
+                <TopCards />
+              </Grid>
+              <Grid
+                size={{
+                  xs: 12,
+                  lg: 12
+                }}>
+                <WelcomeHome />
+              </Grid>
+              </> 
+            )
           )
           }
           {/*

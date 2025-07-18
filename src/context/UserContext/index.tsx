@@ -1,9 +1,8 @@
 'use client'
 import React, { createContext, useEffect, useState } from 'react';
 import { userList, userResetPwd } from 'src/utils/Utils';
-import ApiConfig  from "src/constants/apiConstants";
-
-import axios from '../../utils/axios';
+//api
+import axios from 'src/api/axios';
 
 interface UserContextType {
     user: userList[];
@@ -25,7 +24,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(ApiConfig.apiUrl + 'users');
+                const response = await axios.get('users');
                 setUsers(response.data);
                 setLoading(false);
             } catch (error) {
@@ -53,7 +52,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             console.log("newUser: ",newUser);
             console.log("json newUser: ",JSON.stringify(newUser));
-            const response = await axios.post(ApiConfig.apiUrl + 'users', newUser);
+            const response = await axios.post('users', newUser);
             const addedUser = response.data;
             setUsers((prevUser) => [...prevUser, addedUser]);
         } catch (error) {
@@ -77,7 +76,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const resetPasswordUser = async (seq: number, newpass: string) => {
         const resetPwdUser = { password: newpass };
         try {
-            await axios.put(ApiConfig.apiUrl + 'users/reset/'+ seq, resetPwdUser);
+            await axios.put('users/reset/'+ seq, resetPwdUser);
             setUsers((prevUsers) => prevUsers.filter((users) => users.seq !== seq));
             //const updated = response.data;
             /*

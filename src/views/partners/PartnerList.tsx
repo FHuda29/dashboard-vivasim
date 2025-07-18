@@ -27,27 +27,17 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-
-import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-
-import img1 from 'src/assets/images/profile/user-1.jpg';
-import img2 from 'src/assets/images/profile/user-2.jpg';
-import img3 from 'src/assets/images/profile/user-3.jpg';
-import img4 from 'src/assets/images/profile/user-4.jpg';
-import img5 from 'src/assets/images/profile/user-5.jpg';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
-import { Link } from 'react-router';
-
+import { Link, useNavigate } from 'react-router';
 import { numberFormat, partnerList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -75,6 +65,8 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
   const handleLastPageButtonClick = (event: any) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
+
+  
 
   return (
     <Box sx={{ flexShrink: 0, ml: 2.5 }}>
@@ -118,15 +110,42 @@ const BCrumb = [
 ];
 
 const PartnerList = () => {
+    const router = useNavigate();
+    const [userLevel, setUserLevel] = React.useState('');
+    const [userSession, setUserSession] = React.useState('');
+    const parseNumber = (value: string | number) => typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+
     useEffect(() => {
         //load partner list
-        fetchPartnerList();
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decodedToken:any = jwtDecode(token);
+          console.log('user_name:', decodedToken.user_name);
+          console.log('session_name:', decodedToken.session_name);
+          console.log('session_level:', decodedToken.session_level);
+          console.log('last_login_time:', decodedToken.last_login_time);
+          console.log('blocked:', decodedToken.blocked);
 
+          setUserLevel(decodedToken.session_level);
+          
+          if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+            const user_login = decodedToken.session_name.split('-')[0];
+            setUserSession(user_login);
+            fetchPartnerCobrand(decodedToken.session_name);
+          }else{
+            //load product
+            setUserSession(decodedToken.session_name);
+            fetchPartnerList();
+          }
+        }else{
+          router('/auth/login');
+        }
+        
     }, []);
 
   //get all product
   const fetchPartnerList = async () => {
-    let end_point = apiUrl + "partners";
+    let end_point = "partners";
     axios
         .get(end_point)
         .then((response) => {
@@ -134,10 +153,33 @@ const PartnerList = () => {
             setPartners(response.data);
         })
         .catch((error) => {
-            console.log(error);
+           if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+            } else {
+              console.log(error);
+            }
         });
   }
 
+  const fetchPartnerCobrand = async (cobrand_id:string) => {
+    let end_point = "partners/cobrand/"+cobrand_id;
+    axios
+        .get(end_point)
+        .then((response) => {
+            //console.log(response);
+            setPartners(response.data);
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+          } else {
+            console.log(error);
+          }
+        });
+  }
+  
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectAll, setSelectAll] = React.useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
@@ -169,7 +211,7 @@ const PartnerList = () => {
   return (
     <PageContainer title="Partner" description="this is partner page">
       {/* breadcrumb */}
-      <Breadcrumb title="Partner" items={BCrumb} />
+      {/*<Breadcrumb title="Partner" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="Partner List">
           <Box mb={2}>
@@ -195,26 +237,31 @@ const PartnerList = () => {
                         ),
                     }}
                     />
-                    <Box display="flex" gap={1}>
-                    {selectAll && (
-                        <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleDelete}
-                        startIcon={<IconTrash width={18} />}
-                        >
-                        Delete All
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={Link}
-                        to="/apps/partner/create"
-                    >
-                        Add Partner
-                    </Button>
-                    </Box>
+                    {userLevel.toLowerCase() === 'web-admin' || userLevel.toLowerCase() === 'super-admin' ? (
+                     <Box display="flex" gap={1}>
+                      {selectAll && (
+                          <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={handleDelete}
+                          startIcon={<IconTrash width={18} />}
+                          >
+                          Delete All
+                          </Button>
+                      )}
+                      <Button
+                          variant="contained"
+                          color="primary"
+                          component={Link}
+                          to="/apps/partner/create"
+                      >
+                          Add Partner
+                      </Button>
+                    </Box> 
+                    ):(
+                      <></>
+                    )
+                    }
                 </Stack>
         </Box>
         <BlankCard>    
@@ -239,13 +286,13 @@ const PartnerList = () => {
                   <TableCell>
                     <Typography variant="subtitle2">Payment Type</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Typography variant="subtitle2">Total Invoice</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Typography variant="subtitle2">Base Price</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Typography variant="subtitle2">Total Profit</Typography>
                   </TableCell>
                 </TableRow>
@@ -275,27 +322,48 @@ const PartnerList = () => {
                       {row.payment_type}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <Typography variant="caption">
-                      IDR {numberFormat(row.deposit)}
+                      {numberFormat(row.total_invoice)}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <Typography variant="caption">
-                      IDR {numberFormat(row.ar)}
+                      {numberFormat(row.total_base_price)}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="right">
                       <Typography variant="caption">
-                      IDR 0
+                      {numberFormat(row.profit)}
                       </Typography>
                     </TableCell>
                   </TableRow>
                 ))}
 
+                {/* Tambahkan baris total */}
+                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell colSpan={4}>
+                    <Typography variant="subtitle2" fontWeight="bold">Total</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {numberFormat(rows.reduce((sum, row) => sum + parseNumber(row.total_invoice), 0))}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {numberFormat(rows.reduce((sum, row) => sum + parseNumber(row.total_base_price), 0))}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {numberFormat(rows.reduce((sum, row) => sum + parseNumber(row.profit), 0))}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={7} />
+                    <TableCell colSpan={1} />
                   </TableRow>
                 )}
               </TableBody>
@@ -303,7 +371,7 @@ const PartnerList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={7}
+                    colSpan={1}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

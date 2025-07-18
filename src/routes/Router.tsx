@@ -110,6 +110,10 @@ const OrderEvent = Loadable(lazy(() => import('../views/order/OrderEvent')));
 const CreateOrder = Loadable(lazy(() => import('../views/apps/order/Create')));
 const EditOrder = Loadable(lazy(() => import('../views/apps/order/Edit')));
 
+//upload
+const UploadList = Loadable(lazy(() => import('../views/simcard/UploadList')));
+const UploadDetail = Loadable(lazy(() => import('../views/simcard/UploadDetail')));
+
 //product 
 const MasterProduct = Loadable(lazy(() => import('../views/product/MasterProduct')));
 const ProductCreate = Loadable(lazy(() => import('../views/apps/product/Create')));
@@ -230,6 +234,8 @@ const Router = [
       { path: '/order/history/:order_id', exact: true, element: <OrderEvent /> },
       { path: '/order/create', exact: true, element: <CreateOrder /> },
       { path: '/order/edit/:order_id', exact: true, element: <EditOrder /> },
+      { path: '/simcard/upload', exact: true, element: <UploadList /> },
+      { path: '/simcard/upload/detail/:order_id', exact: true, element: <UploadDetail /> },
       { path: '/product/master', exact: true, element: <MasterProduct /> },
       { path: '/product/partner', exact: true, element: <PartnerProduct /> },
       { path: '/apps/product/create', element: <ProductCreate /> },

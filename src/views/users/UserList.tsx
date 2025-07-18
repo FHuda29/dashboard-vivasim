@@ -35,25 +35,17 @@ import LastPageIcon from '@mui/icons-material/LastPage';
 
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-
-import img1 from 'src/assets/images/profile/user-1.jpg';
-import img2 from 'src/assets/images/profile/user-2.jpg';
-import img3 from 'src/assets/images/profile/user-3.jpg';
-import img4 from 'src/assets/images/profile/user-4.jpg';
-import img5 from 'src/assets/images/profile/user-5.jpg';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
 import { Link } from 'react-router';
-
 import { numberFormat, userList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconAccessible, IconBlockquote, IconKey, IconPackageOff, IconPassword, IconPasswordUser, IconRowRemove, IconSearch, IconSignLeft, IconTrash, IconUrgent } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -128,24 +120,17 @@ const UserList = () => {
     const [userLevel, setUserLevel] = React.useState('');
     const [userSession, setUserSession] = React.useState('');
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        
-        if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          console.log('last_login_time:', parsedData.last_login_time);
-          console.log('blocked:', parsedData.blocked);
-
-          setUserLevel(parsedData.session_level);
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            const user_login = parsedData.session_name.split('-')[0];
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decodedToken:any = jwtDecode(token);
+          setUserLevel(decodedToken.session_level);
+          if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+            const user_login = decodedToken.session_name.split('-')[0];
             setUserSession(user_login);
             fetchUserByCobrand(user_login);
           }else{
             //load user list
-            setUserSession(parsedData.session_name);
+            setUserSession(decodedToken.session_name);
             fetchUserList();
           }
         }else{
@@ -155,7 +140,7 @@ const UserList = () => {
 
   //get all product
   const fetchUserList = async () => {
-    let end_point = apiUrl + "users";
+    let end_point = "users";
     axios
         .get(end_point)
         .then((response) => {
@@ -163,12 +148,17 @@ const UserList = () => {
             setUsers(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
   const fetchUserByCobrand = async (cobrand_id:string) => {
-    let end_point = apiUrl + "users/cobrand/"+cobrand_id;
+    let end_point = "users/cobrand/"+cobrand_id;
     axios
         .get(end_point)
         .then((response) => {
@@ -176,7 +166,12 @@ const UserList = () => {
             setUsers(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+              // Token expired → redirect ke login
+              router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
@@ -187,18 +182,23 @@ const UserList = () => {
         
         const strtValue = event.target.value;
         if(strtValue.length !== 0){
-            let end_point = apiUrl + "users/search?param="+strtValue;
+            let end_point = "users/search?param="+strtValue;
             axios
                 .get(end_point)
                 .then((response) => {
                   setUsers(response.data);
                 })
                 .catch((error) => {
+                  if (error.response && error.response.status === 403 || error.response.status === 401) {
+                      // Token expired → redirect ke login
+                      router('/auth/login');
+                  } else {
                     console.log(error);
+                  }
                 });
         }else{
           //fetchUserList();
-          if(userLevel.toLowerCase() === 'partner'){
+          if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin'){
             fetchUserByCobrand(userSession);
           }else{
             //load product
@@ -260,7 +260,7 @@ const UserList = () => {
     }
 
     try {
-        await axios.put(apiUrl + 'users/block/'+seqID,blockData);
+        await axios.put('users/block/'+seqID,blockData);
         setOpenBlockDialog(false);
         fetchUserList();
     } catch (error) {
@@ -274,7 +274,7 @@ const UserList = () => {
     }
 
     try {
-        await axios.put(apiUrl + 'users/block/'+seqID,blockData);
+        await axios.put('users/block/'+seqID,blockData);
         setOpenUnBlockDialog(false);
         fetchUserList();
     } catch (error) {
@@ -285,7 +285,7 @@ const UserList = () => {
   return (
     <PageContainer title="Users" description="this is users page">
       {/* breadcrumb */}
-      <Breadcrumb title="Users" items={BCrumb} />
+      {/*<Breadcrumb title="Users" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="User List">
           <Box mb={2}>
@@ -419,7 +419,7 @@ const UserList = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={7} />
+                    <TableCell colSpan={1} />
                   </TableRow>
                 )}
               </TableBody>
@@ -427,7 +427,7 @@ const UserList = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={7}
+                    colSpan={1}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

@@ -58,6 +58,16 @@ const MenuitemsAgent: MenuitemsType[] = [
     ],
   },
   {
+    navlabel: true,
+    subheader: 'Management',
+  },
+  {
+    id: uniqueId(),
+    title: 'Product List',
+    icon: IconUserCircle,
+    href: '/product/partner',
+  },
+  {
     id: uniqueId(),
     title: 'Order',
     icon: IconBasket,

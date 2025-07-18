@@ -33,17 +33,18 @@ import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { IconClearAll, IconEdit, IconEye, IconFileInvoice, IconHistory, IconRowRemove } from '@tabler/icons-react';
-import { numberFormat, orderList, formatDate, currentDate,orderEventList } from "src/utils/Utils";
+import { numberFormat, orderList, ordersList, formatDate, currentDate,orderEventList } from "src/utils/Utils";
 
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 import { IconCactus } from '@tabler/icons-react';
+import { ro } from 'date-fns/locale';
+import { set } from 'lodash';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -117,27 +118,38 @@ const OrderList = () => {
     const [userLevel, setUserLevel] = React.useState('');
     const [userSession, setUserSession] = React.useState('');
     const [userName, setUserName] = React.useState('');
-        
+    
+    
+    const [orderId, setOrderId] = React.useState("");
+    const [customerName, setCustomerName] = React.useState("");
+    const [orderStartDate, setOrderStartDate] = React.useState("");
+    const [orderEndDate, setOrderEndDate] = React.useState("");
+    const [orderStatus, setOrderStatus] = React.useState("");
+    const [orderType, setOrderType] = React.useState("");
+    const [orderAgentCode, setOrderAgentCode] = React.useState("");
+
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-            const parsedData = JSON.parse(data_success_login);
-            console.log('user_name:', parsedData.user_name);
-            console.log('session_name:', parsedData.session_name);
-            console.log('session_level:', parsedData.session_level);
-            console.log('last_login_time:', parsedData.last_login_time);
-            console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
+            console.log('user_name:', decodedToken.user_name);
+            console.log('session_name:', decodedToken.session_name);
+            console.log('session_level:', decodedToken.session_level);
+            console.log('last_login_time:', decodedToken.last_login_time);
+            console.log('blocked:', decodedToken.blocked);
             
-            setUserLevel(parsedData.session_level);
-            setUserSession(parsedData.session_name);
-            setUserName(parsedData.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserSession(decodedToken.session_name);
+            setUserName(decodedToken.user_name);
             
 
-            if(parsedData.session_level.toLowerCase() === 'partner'){
-                const user_login = parsedData.session_name.split('-')[0];
+            if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+                const user_login = decodedToken.session_name.split('-')[0];
                 fetcPartnerhOrderList(user_login);
-            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-                fetchAgentOrderList(parsedData.session_name);
+            }else if(decodedToken.session_level.toLowerCase() === 'agent-manager' || decodedToken.session_level.toLowerCase() === 'agent-admin'){
+                fetchAgentOrderList(decodedToken.session_name);
+            }else if(decodedToken.session_level.toLowerCase() === 'cs-web'){
+                fetchOrderListAllByCS();
             }else{
                 fetchOrderListAll();
             }
@@ -148,47 +160,97 @@ const OrderList = () => {
 
     //order list
     const fetchAgentOrderList = async (agent_code:string) => {
-        let end_point = apiUrl + "orders/agent/"+agent_code;
+        let end_point = "orders/agent/"+agent_code;
         axios
             .get(end_point)
             .then((response) => {
                 //console.log(response);
-                setOrderList(response.data);
+                if(response.data.success){
+                    setOrderList(response.data.orders);
+                    setFilteredOrders(response.data.orders);
+                }
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
     //agent_code
     const fetchOrderListAll = async () => {
-        let end_point = apiUrl + "orders";
+        let end_point = "orders";
         axios
             .get(end_point)
             .then((response) => {
                 //console.log(response);
-                setOrderList(response.data);
+                if(response.data.success){
+                    setOrderList(response.data.orders);
+                    setFilteredOrders(response.data.orders);    
+                }
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
+            });
+    }
+
+    const fetchOrderListAllByCS = async () => {
+        let end_point = "orders/cs";
+        axios
+            .get(end_point)
+            .then((response) => {
+                //console.log(response);
+                if(response.data.success){
+                    setOrderList(response.data.orders);
+                    setFilteredOrders(response.data.orders);    
+                }
+            })
+            .catch((error) => {
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetcPartnerhOrderList = async (agent_code:string) => {
-        let end_point = apiUrl + "orders/?agent_code="+agent_code;
+        let end_point = "orders/?agent_code="+agent_code;
         axios
             .get(end_point)
             .then((response) => {
                 //console.log(response);
-                setOrderList(response.data);
+                if(response.data.success){
+                    setOrderList(response.data.orders);
+                    setFilteredOrders(response.data.orders);    
+                }
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     //const [orderList, setOrderList] = React.useState([]); 
     const [orderList, setOrderList] = React.useState([]);
-    const rows: orderList[] = orderList;
+    //const [filteredOrders, setFilteredOrders] = React.useState<orderList[]>([]);
+    const [filteredOrders, setFilteredOrders] = React.useState<ordersList[]>([]);
+
+    //const rows: orderList[] = orderList;
+    //const rows: orderList[] = filteredOrders;
+    const rows: ordersList[] = filteredOrders;
 
     //const rows: OrderListType[] = orderList;
     const [page, setPage] = React.useState(0);
@@ -207,9 +269,24 @@ const OrderList = () => {
         setPage(0);
     };
 
-    const handleMove = () => {
+    const handleGetRecord = () => {
         //setOpenDeleteDialog(true);
-        console.log('move');
+        console.log('get record');
+
+        //const filteredData = filterOrders(rows);
+        //setOrderList(filteredData);
+        const filteredData = orderList.filter(order => {
+            const orderDate = new Date(order.order_date);
+            return (!orderId || order.order_id.includes(orderId)) &&
+                (!customerName || order.order_customer_name.toLowerCase().includes(customerName.toLowerCase())) &&
+                (!orderStartDate || orderDate >= new Date(orderStartDate)) &&
+                (!orderEndDate || orderDate <= new Date(orderEndDate)) &&
+                (!orderStatus || order.order_status === orderStatus) &&
+                (!orderAgentCode || order.order_agent_code.toLowerCase().includes(orderAgentCode.toLowerCase())) &&
+                (!orderType || order.product_type === orderType);
+        });
+
+        setFilteredOrders(filteredData);
     };
 
     const handleDetail = (order_id:string) => {
@@ -227,7 +304,7 @@ const OrderList = () => {
     const handleCancel = async (order_id:string) => {
         //router('/order/history/'+order_id);
         try {
-            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Cancelled");
+            const response = await axios.get('orders/update/'+order_id+"/Cancelled");
             const updateStatus = response.data;
             if(updateStatus){
                 if(updateStatus.order_id === order_id){
@@ -255,7 +332,7 @@ const OrderList = () => {
 
     const handleClose = async (order_id:string) => {
         try {
-            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Closed");
+            const response = await axios.get('orders/update/'+order_id+"/Closed");
             const updateStatus = response.data;
             if(updateStatus){
                 if(updateStatus.order_id === order_id){
@@ -283,16 +360,29 @@ const OrderList = () => {
 
     const addOrderEvent = async (orderEvent: orderEventList) => {
         try {
-            const response = await axios.post(ApiConfig.apiUrl + 'order/event', orderEvent);
+            const response = await axios.post('order/event', orderEvent);
             const addOrderEvent = response.data;
         } catch (error) {
             console.error('Error adding order events :', error);
         }
     };
+    
+    function filterOrders(data:any) {
+        return data.filter(order => {
+            const orderDate = new Date(order.order_date);
+            return (!orderId || order.order_id.includes(orderId)) &&
+                (!customerName || order.order_customer_name.toLowerCase().includes(customerName.toLowerCase())) &&
+                (!orderStartDate || orderDate >= new Date(orderStartDate)) &&
+                (!orderEndDate || orderDate <= new Date(orderEndDate)) &&
+                (!orderStatus || order.order_status === orderStatus) &&
+                (!orderAgentCode || order.order_agent_code.toLowerCase().includes(orderAgentCode.toLowerCase())) &&
+                (!orderType || order.product_type === orderType);
+        });
+    }
 
     return (
         <PageContainer title="Order" description="this is order page">
-            <Breadcrumb title="Order" items={BCrumb} />
+            {/*<Breadcrumb title="Order" items={BCrumb} />*/}
             <ParentCard title="Order List">
                 <Box mt={2} mb={2}>
                     <Grid size={{ xs: 12 }}>
@@ -303,6 +393,7 @@ const OrderList = () => {
                                 </Typography>
                                 <CustomTextField
                                     fullWidth
+                                    onChange={(e: any) => setOrderId(e.target.value)}
                                 />
                             </Grid>
                             <Grid size={{ xs: 3 }}>
@@ -311,6 +402,7 @@ const OrderList = () => {
                                 </Typography>
                                 <CustomTextField
                                     fullWidth
+                                    onChange={(e: any) => setCustomerName(e.target.value)}
                                 />
                             </Grid>
                             <Grid size={{ xs: 3 }}>
@@ -320,6 +412,7 @@ const OrderList = () => {
                                 <CustomTextField
                                     fullWidth
                                     type="date"
+                                    onChange={(e: any) => setOrderStartDate(e.target.value)}
                                 />
                             </Grid>
                             <Grid size={{ xs: 3 }}>
@@ -329,6 +422,7 @@ const OrderList = () => {
                                 <CustomTextField
                                     fullWidth
                                     type="date"
+                                    onChange={(e: any) => setOrderEndDate(e.target.value)}
                                 />
                             </Grid>
                             <Grid size={{ xs: 3 }}>
@@ -338,46 +432,72 @@ const OrderList = () => {
                                 <CustomSelect
                                     fullWidth
                                     variant="outlined"
+                                    onChange={(e: any) => setOrderStatus(e.target.value)}
                                 >
-                                    <MenuItem value={1}>New</MenuItem>
-                                    <MenuItem value={2}>Approved</MenuItem>
-                                    <MenuItem value={3}>Paid</MenuItem>
-                                    <MenuItem value={4}>Delivered</MenuItem>
-                                    <MenuItem value={5}>Returned</MenuItem>
-                                    <MenuItem value={6}>Closed</MenuItem>
-                                    <MenuItem value={7}>Cancelled</MenuItem>
+                                    <MenuItem value='New'>New</MenuItem>
+                                    <MenuItem value='Approved'>Approved</MenuItem>
+                                    <MenuItem value='Paid'>Paid</MenuItem>
+                                    <MenuItem value='Delivered'>Delivered</MenuItem>
+                                    <MenuItem value='Returned'>Returned</MenuItem>
+                                    <MenuItem value='Closed'>Closed</MenuItem>
+                                    <MenuItem value='Cancelled'>Cancelled</MenuItem>
                                 </CustomSelect>
                             </Grid>
-                            <Grid size={{ xs: 6 }}>
-                                <Typography variant="subtitle1">
-                                    Agent
-                                </Typography>
-                                <CustomSelect
-                                    fullWidth
-                                    variant="outlined"
-                                >
-                                    <MenuItem value={1}>GRM - TIA - TIA FINANCE HO</MenuItem>
-                                    <MenuItem value={2}>RKL - RKL - DAVID - DAVID WIDJAJA</MenuItem>
-                                    <MenuItem value={3}>RYC - BUFANNY - BU FANNY</MenuItem>
-                                </CustomSelect>
-                            </Grid>
-                            <Grid size={{ xs: 3 }}>
-                                <Typography variant="subtitle1">
-                                    Type
-                                </Typography>
-                                <CustomSelect
-                                    fullWidth
-                                    variant="outlined"
-                                >
-                                    <MenuItem value={1}>Simcard</MenuItem>
-                                    <MenuItem value={2}>eSIM</MenuItem>
-                                </CustomSelect>
-                            </Grid>
+                            {userLevel.toLowerCase() === 'web-admin' ?(
+                                <>
+                                <Grid size={{ xs: 6 }}>
+                                    <Typography variant="subtitle1">
+                                        Agent
+                                    </Typography>
+                                    <CustomSelect
+                                        fullWidth
+                                        variant="outlined"
+                                        onChange={(e: any) => setOrderAgentCode(e.target.value)}
+                                    >
+                                        <MenuItem value='GRM'>GRM - TIA - TIA FINANCE HO</MenuItem>
+                                        <MenuItem value='RKL'>RKL - RKL - DAVID - DAVID WIDJAJA</MenuItem>
+                                        <MenuItem value='RYC'>RYC - BUFANNY - BU FANNY</MenuItem>
+                                    </CustomSelect>
+                                </Grid>
+                                <Grid size={{ xs: 3 }}>
+                                    <Typography variant="subtitle1">
+                                        Type
+                                    </Typography>
+                                    <CustomSelect
+                                        fullWidth
+                                        variant="outlined"
+                                        onChange={(e: any) => setOrderType(e.target.value)}
+                                    >
+                                        <MenuItem value='SIM'>Simcard</MenuItem>
+                                        <MenuItem value='ESIM'>eSIM</MenuItem>
+                                    </CustomSelect>
+                                </Grid>
+                                </>
+                            ):(
+                                <>
+                                <Grid size={{ xs: 3 }}>
+                                    <Typography variant="subtitle1">
+                                        Type
+                                    </Typography>
+                                    <CustomSelect
+                                        fullWidth
+                                        variant="outlined"
+                                        onChange={(e: any) => setOrderType(e.target.value)}
+                                    >
+                                        <MenuItem value='SIM'>Simcard</MenuItem>
+                                        <MenuItem value='ESIM'>eSIM</MenuItem>
+                                    </CustomSelect>
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <></>
+                                </Grid>
+                                </>
+                            )}
                             <Grid size={{ xs: 12 }}>
                                 <Button
                                     variant="contained" 
                                     color="primary"
-                                    onClick={handleMove}
+                                    onClick={handleGetRecord}
                                 >
                                     Get Record
                                 </Button>
@@ -554,7 +674,7 @@ const OrderList = () => {
                                     )
                                     }
                                     <TableCell>
-                                        <Typography variant="subtitle2">{index+1}</Typography>
+                                        <Typography variant="subtitle2">{page * rowsPerPage + index + 1}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
@@ -568,7 +688,7 @@ const OrderList = () => {
                                     </TableCell>
                                     <TableCell>
                                         <Typography color="textSecondary" variant="subtitle2" fontWeight="400">
-                                            {row.order_type}    
+                                            {row.product_type}    
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
@@ -592,40 +712,40 @@ const OrderList = () => {
                                           />
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_customer_name}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.customer_name}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_phone.length > 0 ? row.order_contact_phone : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.contact_phone.length > 0 ? row.contact_phone : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_wa.length > 0 ? row.order_contact_wa : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.contact_wa.length > 0 ? row.contact_wa : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_contact_email.length > 0 ? row.order_contact_email : '-'}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.email_address.length > 0 ? row.email_address : '-'}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_agent_code}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.agent_code}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_agent_name}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.agent_name}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.order_product}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{row.country_name}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_qty)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_quantity)}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_product_price)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.total_order)}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.order_product_total_price)}</Typography>
+                                          <Typography color="textSecondary" variant="subtitle2" fontWeight="400">{numberFormat(row.total_cost)}</Typography>
                                     </TableCell>
                                 </TableRow>
                                 ))}
                                 {emptyRows > 0 && (
                                 <TableRow style={{ height: 53 * emptyRows }}>
-                                    <TableCell colSpan={6} />
+                                    <TableCell colSpan={2} />
                                 </TableRow>
                                 )}
                             </TableBody>
@@ -633,7 +753,7 @@ const OrderList = () => {
                                 <TableRow>
                                     <TablePagination
                                         rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                        colSpan={16}
+                                        colSpan={2}
                                         count={rows.length}
                                         rowsPerPage={rowsPerPage}
                                         page={page}

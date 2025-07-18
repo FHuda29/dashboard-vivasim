@@ -5,16 +5,7 @@ import {
   Alert,
   Button,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Typography,
-  IconButton,
-  Tooltip,
   Box,
   Stack,
   Divider,
@@ -22,9 +13,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { format, isValid } from 'date-fns';
-//import { IconPlus, IconSquareRoundedPlus, IconTrash } from '@tabler/icons-react';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
-//import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 
@@ -86,7 +75,6 @@ const CreateProduct = () => {
       setTimeout(() => {
         setShowAlert(false);
       }, 5000);
-      //router('/apps/invoice/list');
       router('/product/master');
     } catch (error) {
       console.error('Error adding product:', error);
@@ -111,7 +99,6 @@ const CreateProduct = () => {
               variant="outlined"
               color="error"
               onClick={() => {
-                //router('/apps/invoice/list');
                 router('/product/master');
               }}
             >

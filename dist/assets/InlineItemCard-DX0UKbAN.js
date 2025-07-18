@@ -1,0 +1,1 @@
+import{j as s}from"./index-bBoaL7NX.js";import{B as t}from"./Box-Cbtftx36.js";const m=({children:o})=>s.jsx(t,{sx:{display:{xs:"flex",sm:"inline-block"},flexDirection:{xs:"column",sm:"unset"},".MuiChip-root, .MuiButton-root":{m:"5px"}},children:o});export{m as I};

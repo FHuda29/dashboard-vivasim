@@ -1,9 +1,8 @@
 'use client'
 import React, { createContext, useEffect, useState } from 'react';
 import { ProductList } from 'src/utils/Utils';
-import ApiConfig  from "src/constants/apiConstants";
-
-import axios from '../../utils/axios';
+//api
+import axios from 'src/api/axios';
 
 interface ProductContextType {
     products: ProductList[];
@@ -25,7 +24,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const fetchData = async () => {
             try {
                 //const response = await axios.get('/api/data/invoicedata');
-                const response = await axios.get(ApiConfig.apiUrl + 'products');
+                const response = await axios.get('products');
                 setProducts(response.data);
                 setLoading(false);
             } catch (error) {
@@ -53,7 +52,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
             //console.log("newProduct: ",newProduct);
             //console.log("json newProduct: ",JSON.stringify(newProduct));
-            const response = await axios.post(ApiConfig.apiUrl + 'products', newProduct);
+            const response = await axios.post('products', newProduct);
             const addedProduct = response.data;
             setProducts((prevProduct) => [...prevProduct, addedProduct]);
         } catch (error) {

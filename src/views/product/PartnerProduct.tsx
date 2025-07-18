@@ -32,21 +32,18 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-
-import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
 import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
 import { Link, useNavigate } from 'react-router';
-
 import { numberFormat, PartnerProductList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
-import { IconEdit, IconEye, IconHistory, IconSearch, IconTrash } from '@tabler/icons-react';
+import { IconEdit, IconEye, IconHistory, IconSearch, IconTrash, IconClearAll } from '@tabler/icons-react';
+import ClearIcon from '@mui/icons-material/Clear';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -122,36 +119,37 @@ const PartnerProduct = () => {
     const [userSession, setUserSession] = React.useState('');
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        
-        if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          console.log('last_login_time:', parsedData.last_login_time);
-          console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+          const decodedToken:any = jwtDecode(token);
 
-          setUserLevel(parsedData.session_level);
+          console.log('user_name:', decodedToken.user_name);
+          console.log('session_name:', decodedToken.session_name);
+          console.log('session_level:', decodedToken.session_level);
+          console.log('last_login_time:', decodedToken.last_login_time);
+          console.log('blocked:', decodedToken.blocked);
+
+          setUserLevel(decodedToken.session_level);
           
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            const user_login = parsedData.session_name.split('-')[0];
+          if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin' || decodedToken.session_level.toLowerCase() === 'agent-admin' || decodedToken.session_level.toLowerCase() === 'agent-manager'){
+            const user_login = decodedToken.session_name.split('-')[0];
             setUserSession(user_login);
             fetchProductCobrand(user_login);
           }else{
             //load product
-            setUserSession(parsedData.session_name);
+            setUserSession(decodedToken.session_name);
             fetchProductAllPartner();
           }
         }else{
           router('/auth/login');
-        }
+        } 
+
         
     }, []);
 
   //get all product
   const fetchProductAllPartner = async () => {
-    let end_point = apiUrl + "product/partner";
+    let end_point = "product/partner";
     axios
         .get(end_point)
         .then((response) => {
@@ -159,12 +157,17 @@ const PartnerProduct = () => {
             setProductPartner(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
   const fetchProductCobrand = async (cobrand_id:string) => {
-    let end_point = apiUrl + "product/partner/cobrand/"+cobrand_id;
+    let end_point = "product/partner/cobrand/"+cobrand_id;
     axios
         .get(end_point)
         .then((response) => {
@@ -172,12 +175,27 @@ const PartnerProduct = () => {
             setProductPartner(response.data);
         })
         .catch((error) => {
+          if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+          } else {
             console.log(error);
+          }
         });
   }
 
   
   const [searchTerm, setSearchTerm] = React.useState("");
+  
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin' || userLevel.toLowerCase() === 'agent-admin' || userLevel.toLowerCase() === 'agent-manager'){
+        fetchProductCobrand(userSession);
+      }else{
+        fetchProductAllPartner();
+    }
+  }
+  
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [seqID, setSeqID] = React.useState(0);
 
@@ -208,17 +226,27 @@ const PartnerProduct = () => {
     
     const strtValue = event.target.value;
     if(strtValue.length !== 0){
-        let end_point = apiUrl + "product/partner/search?param="+strtValue;
+        let end_point = "product/partner";
+        if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin' || userLevel.toLowerCase() === 'agent-admin' || userLevel.toLowerCase() === 'agent-manager'){
+          end_point = end_point + "/cobrand/"+userSession+"/search?param="+strtValue;
+        }else{
+          end_point = end_point + "/search?param="+strtValue;
+        }
         axios
             .get(end_point)
             .then((response) => {
                 setProductPartner(response.data);
             })
             .catch((error) => {
+              if (error.response && error.response.status === 403 || error.response.status === 401) {
+                // Token expired → redirect ke login
+                router('/auth/login');
+              } else {
                 console.log(error);
+              }
             });
     }else{
-      if(userLevel.toLowerCase() === 'partner'){
+      if(userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin' || userLevel.toLowerCase() === 'agent-admin' || userLevel.toLowerCase() === 'agent-manager'){
         console.log("masuk 1",userLevel);
         fetchProductCobrand(userSession);
       }else{
@@ -252,7 +280,7 @@ const PartnerProduct = () => {
   // Handle confirming deletion of selected products
   const handleConfirmDelete = async () => {
     try {
-        await axios.delete(apiUrl + 'product/partner/delete/'+seqID);
+        await axios.delete('product/partner/delete/'+seqID);
         setOpenDeleteDialog(false);
         //fetchProductAllPartner();
         if(userLevel.toLowerCase() === 'partner'){
@@ -269,7 +297,7 @@ const PartnerProduct = () => {
   return (
     <PageContainer title="Products" description="this is partner products page">
       {/* breadcrumb */}
-      <Breadcrumb title="Products" items={BCrumb} />
+      {/*<Breadcrumb title="Products" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="Partner Product List">
           <Box mb={2}>
@@ -290,6 +318,11 @@ const PartnerProduct = () => {
                         InputProps={{
                             endAdornment: (
                             <InputAdornment position="end">
+                                {searchTerm && (
+                                  <IconButton onClick={handleClearSearch} size="small">
+                                    <ClearIcon fontSize='small'/>
+                                  </IconButton>
+                                )}
                                 <IconSearch size={"16"} />
                             </InputAdornment>
                             ),
@@ -435,7 +468,7 @@ const PartnerProduct = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={9} />
+                    <TableCell colSpan={2} />
                   </TableRow>
                 )}
               </TableBody>
@@ -443,7 +476,7 @@ const PartnerProduct = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={9}
+                    colSpan={2}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

@@ -2,7 +2,7 @@ import * as React from 'react';
 //api
 import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
+//import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router';
 import { numberFormat, invSummaryAgent, formatDate } from "src/utils/Utils";
@@ -15,8 +15,10 @@ import icon3 from '../../../assets/images/svgs/icon-briefcase.svg';
 import icon4 from '../../../assets/images/svgs/icon-mailbox.svg';
 import icon5 from '../../../assets/images/svgs/icon-favorites.svg';
 import icon6 from '../../../assets/images/svgs/icon-dd-invoice.svg';
+import { jwtDecode } from 'jwt-decode';
 
-const apiUrl = ApiConfig.apiUrl;
+//const apiUrl = ApiConfig.apiUrl;
+import axios from 'src/api/axios';
 
 interface cardType {
   icon: string;
@@ -73,44 +75,40 @@ const TopCards = () => {
   const [totalPartner, setTotalPartner] = React.useState(0);
   const [totalAgent, setTotalAgent] = React.useState(0);
 
+  //const [totalDeposit, setTotalDeposit] = React.useState(0);
+  //const [totalBasePrice, setTotalBasePrice] = React.useState(0);
+  //const [totalProfit, setTotalProfit] = React.useState(0);
+
   useEffect(() => {
-              const data_success_login = localStorage.getItem('data_success_login');
-              if (data_success_login) {
-                  const parsedData = JSON.parse(data_success_login);
-                  console.log('user_name:', parsedData.user_name);
-                  console.log('session_name:', parsedData.session_name);
-                  console.log('session_level:', parsedData.session_level);
-                  console.log('last_login_time:', parsedData.last_login_time);
-                  console.log('blocked:', parsedData.blocked);
-                  
-                  setUserName(parsedData.user_name);
-                  setUserLevel(parsedData.session_level);
-                  setUserSession(parsedData.session_name);
-      
-                  if(parsedData.session_level.toLowerCase() === 'partner'){
-                      const user_login = parsedData.session_name.split('-')[0];
-                      //fetchInventorySummaryPartner(user_login);
-                      fetchTotalAgent(parsedData.session_name);
-                  }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
-                      //fetchInventorySummaryAgent(parsedData.session_name);
-                  }else if(parsedData.session_level.toLowerCase() === 'agent-admin'){
-                      //fetchInventorySummaryAgent(parsedData.session_name);    
-                  }else{
-                      //fetchInventorySummaryAll();
-                      fetchTotalPartner();
-                      fetchTotalAgent("1");
-                      fetchTotalDeposit();
-                      fetchTotalBasePrice();
-                      fetchTotalSaldoAvailable();
-                      fetchTotalInventory();
-                  }
-              }else{
-                  router('/auth/login');
-              }
+            const token = localStorage.getItem('token');
+            if (token) {
+                const decoded:any = jwtDecode(token);
+                console.log("decoded: ",decoded);
+
+                setUserName(decoded.user_name);
+                setUserLevel(decoded.session_level);
+                setUserSession(decoded.session_name);
+                if(decoded.session_level.toLowerCase() === 'partner' || decoded.session_level.toLowerCase() === 'partner-admin'){
+                    const user_login = decoded.session_name.split('-')[0];
+                    fetchTotalAgent(decoded.session_name);
+                }else if(decoded.session_level.toLowerCase() === 'agent-manager'){
+                    //fetchInventorySummaryAgent(parsedData.session_name);
+                }else if(decoded.session_level.toLowerCase() === 'agent-admin'){
+                    //fetchInventorySummaryAgent(parsedData.session_name);
+                }else{
+                    //fetchInventorySummaryAll();
+                    fetchTotalPartner();
+                    //fetchTotalAgent("1");
+                    //fetchTotalDeposit();
+                    //fetchTotalInventory();
+                }    
+            }else{
+                router('/auth/login');
+            }       
   }, []);
 
   const fetchTotalPartner = async () => {
-    let end_point = apiUrl + "dashboard/total/partner";
+    let end_point = "dashboard/total/partner";
       axios
         .get(end_point)
         .then((response) => {
@@ -118,58 +116,93 @@ const TopCards = () => {
           setTotalPartner(data.total_partner);
 
           topcards[0].digits = data.total_partner;
+          fetchTotalAgent("1");
 
       }).catch((error) => {
-        console.log(error);
+        if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+        } else {
+          console.log(error);
+        }
       });
   }
 
   const fetchTotalAgent = async (user_login:string) => {
-    let end_point = apiUrl + "dashboard/total/agent/"+user_login;
+    let end_point = "dashboard/total/agent/"+user_login;
       axios
         .get(end_point)
         .then((response) => {
           const data = response.data[0];
           setTotalAgent(data.total_agent);
           topcards[1].digits = data.total_agent;
+          fetchTotalDeposit();
       }).catch((error) => {
-        console.log(error);
+        if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+        } else {
+          console.log(error);
+        }
       });
   }
 
   const fetchTotalDeposit = async () => {
-    let end_point = apiUrl + "dashboard/total/deposit";
+    let end_point = "dashboard/total/deposit";
       axios
         .get(end_point)
         .then((response) => {
           const data = response.data[0];
           topcards[2].digits = data.total_deposit;
+          //setTotalDeposit(data.total_deposit);
+          fetchTotalBasePrice();
       }).catch((error) => {
-        console.log(error);
+        if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+        } else {
+          console.log(error);
+        }
       });
   }
 
   const fetchTotalBasePrice = async () => {
-    let end_point = apiUrl + "dashboard/total/baseprice";
+    let end_point = "dashboard/total/baseprice";
       axios
         .get(end_point)
         .then((response) => {
           const data = response.data[0];
           topcards[3].digits = data.total;
+          //setTotalBasePrice(data.total);
+          //const total_profit = totalDeposit - parseInt(data.total)
+          //topcards[4].digits = total_profit.toString();
+          //setTotalProfit(total_profit);
+          fetchTotalSaldoAvailable();
+          fetchTotalInventory();
       }).catch((error) => {
-        console.log(error);
+        if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+        } else {
+          console.log(error);
+        }
       });
   }
 
   const fetchTotalInventory = async () => {
-    let end_point = apiUrl + "dashboard/total/inventory";
+    let end_point = "dashboard/total/inventory";
       axios
         .get(end_point)
         .then((response) => {
           const data = response.data[0];
           topcards[5].digits = data.total_inventory;
       }).catch((error) => {
-        console.log(error);
+        if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+            router('/auth/login');
+        } else {
+          console.log(error);
+        }
       });
   }
 

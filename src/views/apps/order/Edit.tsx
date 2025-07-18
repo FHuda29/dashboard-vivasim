@@ -1,25 +1,22 @@
 import React, { useState, useContext, useEffect } from 'react';
 import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-//import CreateProductApp from 'src/components/apps/product/Add-product';                                             
 import BlankCard from 'src/components/shared/BlankCard';
 import { Alert, Box, Button, CardContent, Divider, FormControlLabel, Grid2 as Grid, MenuItem, Radio, RadioGroup, Stack, Typography } from '@mui/material';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-//import router from 'src/routes/Router';
 import { useNavigate, useParams } from 'react-router';
-//import { ProductProvider } from 'src/context/ProductContext';
-
 import { numberFormat, orderList, formatDate, generateRandomString, currentDate, generateTrxId, orderEventList } from "src/utils/Utils";
-import axios from 'axios';
-import ApiConfig  from "src/constants/apiConstants";
 import { VisibilityOff, Visibility } from '@mui/icons-material';
 import { text } from 'stream/consumers';
 import { textAlign } from '@mui/system';
 import { tr } from 'date-fns/locale';
-const apiUrl = ApiConfig.apiUrl;
+import { set } from 'lodash';
 
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 const BCrumb = [
   {
@@ -41,14 +38,14 @@ const fupPackage = [
 
 
 const quotaPackage = [
-  { id: 0, value: '3000', label: '3Gb' },
-  { id: 1, value: '5000', label: '5Gb' },
-  { id: 2, value: '6000', label: '6Gb' },
-  { id: 3, value: '7000', label: '7Gb' },
-  { id: 4, value: '10000', label: '10Gb' },
-  { id: 5, value: '15000', label: '15Gb' },
-  { id: 6, value: '20000', label: '20Gb' },
-  { id: 7, value: '30000', label: '30Gb' }
+  { id: 0, value: '3Gb', label: '3Gb' },
+  { id: 1, value: '5Gb', label: '5Gb' },
+  { id: 2, value: '6Gb', label: '6Gb' },
+  { id: 3, value: '7Gb', label: '7Gb' },
+  { id: 4, value: '10Gb', label: '10Gb' },
+  { id: 5, value: '15Gb', label: '15Gb' },
+  { id: 6, value: '20Gb', label: '20Gb' },
+  { id: 7, value: '30Gb', label: '30Gb' }
 ]
 
 const daysPackage = [
@@ -112,7 +109,7 @@ const EditOrder = () => {
     const [showQuotaSelect, setShowQuotaSelect] = useState(false);
 
     //const [orderList, setOrderList] = React.useState([]);
-
+    
     //const { addProduct, products } = useContext(ProductPartnerContext);
     const [showAlert, setShowAlert] = useState(false);
     const router = useNavigate();
@@ -132,123 +129,167 @@ const EditOrder = () => {
       quantity: 1,
       product_id: '',
       product_price: 0,
-      ccid: ''
+      ccid: '',
+      partner_id: ''
     });
   
     useEffect(() => {
-      const data_success_login = localStorage.getItem('data_success_login');
-      if (data_success_login) {
-          const parsedData = JSON.parse(data_success_login);
-          console.log('data_success_login:', parsedData);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
 
-          console.log('user_name:', parsedData.user_name);
-          console.log('session_name:', parsedData.session_name);
-          console.log('session_level:', parsedData.session_level);
-          //console.log('last_login_time:', parsedData.last_login_time);
-          //console.log('blocked:', parsedData.blocked);
-          setUserName(parsedData.user_name);
-          setUserLevel(parsedData.session_level);
-          setUserLogin(parsedData.session_name);
+            setUserName(decodedToken.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserLogin(decodedToken.session_name);
+            setUserSession(decodedToken.session_name);
 
-          //get aget name
-          fetchAgentByCode(parsedData.session_name);
+            //get aget name
+            fetchAgentByCode(decodedToken.session_name);
 
-          
-          const partnerID = parsedData.session_name.split('-')[0];
-          setUserSession(partnerID);
+            
+            const partnerID = decodedToken.session_name.split('-')[0];
+            console.log('partnerID:', partnerID);
+            
 
-          //list product
-          fetchProductPartner(partnerID);
+            //list product
+            fetchProductPartner(partnerID);
 
-          //oder detail
-          fetchOrderList(order_id);
-          
-          /*
-          setFormData((prevData: any) => ({
-            ...prevData,
-            cobrand_id: parsedData.session_name
-          }));
-          */
+            //oder detail
+            fetchOrderList(order_id,partnerID);
+        }else{
+            router('/auth/login');
+        }
 
-          if(parsedData.session_level.toLowerCase() === 'partner'){
-            //fetchAgentListCobrand((parsedData.session_name));
-          }else{
-            //load partner list
-            //fetchPartnerList();
-          }
-      }
-      
       //list country
       fetchCountryList();
       
-      /*
-      if (products.length > 0) {
-        const lastId = products[products.length - 1].seq;
-        //console.log("lastId : ",lastId);
-        setFormData((prevData: any) => ({
-          ...prevData,
-          seq: lastId + 1,
-        }));
-      } else {
-        setFormData((prevData: any) => ({
-          ...prevData,
-          seq: 1,
-        }));
-      }
-      */  
+        
     }, []);
     
-    const fetchOrderList = async (orderId:string) => {
-        let end_point = apiUrl + "orders/id/"+orderId;
+    const fetchOrderList = async (orderId:string,partner_id: string) => {
+        let end_point = "orders/id/"+orderId;
         axios
             .get(end_point)
             .then((response) => {
                 console.log("order_detail: ",response.data);
                 //setOrderList(response.data);
-                
-                setFormData((prevData: any) => ({
-                  ...prevData,
-                  seq: response.data[0].seq,
-                  order_id: response.data[0].order_id,
-                  nama_pengguna: response.data[0].order_customer_name,
-                  telp_pengguna: response.data[0].order_contact_phone,
-                  email_pengguna: response.data[0].order_contact_email,
-                  type: response.data[0].order_type,
-                  package_type: response.data[0].order_fup.length > 0 ? '1' : '2',
-                  country: response.data[0].order_country_code,
-                  days: response.data[0].order_days,
-                  fup: response.data[0].order_fup,
-                  quota: response.data[0].order_quota,
-                  quantity: response.data[0].order_qty,
-                  product_id: response.data[0].order_product,
-                  product_price: response.data[0].order_product_price,
-                  ccid: response.data[0].order_ccid
-                }));
+                const responseData = response.data.orders[0];
 
                 setIsSelectable(false);
-                if(response.data[0].order_fup.length > 0){
+                //if(response.data[0].order_fup.length > 0){
+                if(responseData.package_name.toLowerCase().includes("unlimited")){
                   setShowFupSelect(true);
-                  formData.fup = response.data[0].order_fup;
+                  //formData.fup = response.data[0].order_fup;
                 }else{
                   setShowQuotaSelect(true);  
-                  formData.quota = response.data[0].order_quota;  
+                  //formData.quota = response.data[0].order_quota;  
                 }
-                 
-                
-                const qty = response.data[0].order_qty;
-                const parsedValues = response.data[0].order_ccid.split("|");
+
+                const qty = responseData.order_quantity;
+                /*
+                const parsedValues = responseDataEdit.order_ccid.split(",");
                 for(let i = 1; i <= qty; i++){
                   formData[`ccid_${i}`] = parsedValues[i-1];
-                }   
+                }*/
+                const orderCcid = responseData.order_ccid || "";
+                console.log("orderCcid : ",orderCcid);
+                //formData["ccid_1"] = orderCcid;
 
+                if (orderCcid.includes(",")) {
+                    const parsedValues = orderCcid.split(",");
+                    for (let i = 1; i <= qty; i++) {
+                        formData[`ccid_${i}`] = parsedValues[i - 1] || "";
+                    }
+                } else {
+                    formData["ccid_1"] = orderCcid;
+                }  
+
+                fetcPackageList(responseData,responseData.package_id,partner_id);
+            })
+            .catch((error) => {
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
+            });
+    }
+
+
+    const fetcPackageList = async (responseData: any,package_id: string,partner_id: string) => {
+        console.log("package_id : ",package_id);
+        console.log("userSession retrived: ",partner_id);
+
+        let end_point = "product/partner/package/"+package_id+"/"+partner_id;
+        axios
+            .get(end_point)
+            .then((response) => {
+                //console.log("list_product_partner : ",response.data);
+                const responsePackage = response.data[0];
+                
+                
+                if (!responseData || Object.keys(responseData).length === 0) {
+                    console.error("responseData is empty or undefined");
+                    return;
+                }    
+                const responseDataEdit = { ...responseData };
+                
+                const seq = responseDataEdit.seq;
+                const order_id = responseDataEdit.order_id;
+                const order_date = responseDataEdit.order_date;
+                const type = responseDataEdit.product_type;
+                const order_status = responseDataEdit.order_status;
+                const nama_pengguna = responseDataEdit.customer_name;
+
+                
+                console.log("seq : ",seq);
+                console.log("order_id : ",order_id);
+                console.log("order_date : ",order_date);
+                console.log("type : ",type);
+                console.log("order_status : ",order_status);
+                console.log("nama_pengguna : ",nama_pengguna);
+
+                setFormData((prevData: any) => ({
+                  ...prevData,
+                  seq: seq,
+                  order_id: responseDataEdit.order_id,
+                  order_date: responseDataEdit.order_date,
+                  type: responseDataEdit.product_type,
+                  order_status: responseDataEdit.order_status,
+                  nama_pengguna: responseDataEdit.customer_name,
+                  telp_pengguna: responseDataEdit.contact_phone,
+                  contact_wa: responseDataEdit.contact_wa,
+                  email_pengguna: responseDataEdit.email_address,
+                  agent_code: responseDataEdit.agent_code,
+                  agent_name: responseDataEdit.agent_name,
+                  country_name: responseDataEdit.country_name,
+                  package_id: responseDataEdit.package_id,
+                  package_name: responseDataEdit.package_name,
+                  quantity: responseDataEdit.order_quantity,
+                  total_order: responseDataEdit.total_order,
+                  total_cost: responseDataEdit.total_cost,
+                  package_type: responseDataEdit.package_name.toLowerCase().includes("unlimited") ? "1" : "2",
+                  country: responsePackage.country,
+                  days: responsePackage.days,
+                  fup: responsePackage.quota,
+                  quota: responsePackage.order_quota,
+                  product_id: responseDataEdit.package_id,
+                  product_price: responseDataEdit.total_order,
+                  partner_id: partner_id
+                }));
+
+                
+                 
+                
+                
             })
             .catch((error) => {
                 console.log(error);
             });
     }
-
     const fetchAgentByCode = async (agentCode: string) => {
-        let end_point = apiUrl + "agents/code/"+agentCode;
+        let end_point = "agents/code/"+agentCode;
         axios
             .get(end_point)
             .then((response) => {
@@ -260,24 +301,34 @@ const EditOrder = () => {
                 }));
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const fetchProductPartner = async (cobrand_id: string) => {
-        let end_point = apiUrl + "product/partner/cobrand/"+cobrand_id;
+        let end_point = "product/partner/cobrand/"+cobrand_id;
         axios
             .get(end_point)
             .then((response) => {
                 console.log("list_product_partner : ",response.data);
             })
             .catch((error) => {
-                console.log(error);
+               if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
-    const fetchProductDetail = async (country_code: string,days: number,quota: string) => {
-        let end_point = apiUrl + "product/partner/"+country_code+"/"+days+"/"+quota;
+    const fetchProductDetail = async (country_code: string,days: number,quota: string, partner_id: string) => {
+        let end_point = "product/partner/"+country_code+"/"+days+"/"+quota+"/"+partner_id;
         axios
             .get(end_point)
             .then(async (response) => {
@@ -295,7 +346,8 @@ const EditOrder = () => {
 
                 const paket_id = response.data[0].package_id;
                 const paket_price = response.data[0].selling_price;
-                const packet_name = response.data[0].package_name;
+                const packet_name = response.data[0].package_name;  
+                const cobrain_price = response.data[0].cobrain_price;
 
                 //total product_price
                 const total_product_price = formData.quantity * paket_price;
@@ -335,6 +387,7 @@ const EditOrder = () => {
 
                 
                 //add order
+                /*
                 const dataOrder = {
                     seq: formData.seq,
                     order_id: formData.order_id,
@@ -357,6 +410,35 @@ const EditOrder = () => {
                     order_product_price: paket_price,
                     order_product_total_price: total_product_price,
                     package_name: packet_name
+                }
+                */
+
+                
+                const dataOrder = {
+                    seq: 0,
+                    order_id: order_id,
+                    order_date: order_date,
+                    order_type: formData.type,
+                    order_status: 'New',
+                    order_customer_name: formData.nama_pengguna,
+                    order_contact_phone: formData.telp_pengguna,
+                    order_contact_wa: formData.telp_pengguna,
+                    order_contact_email: formData.email_pengguna,
+                    order_agent_code: order_agent_code,
+                    order_agent_name: formData.agent_name,
+                    order_product: paket_id,
+                    order_country_code: formData.country,
+                    order_fup: formData.fup,
+                    order_quota: formData.quota,
+                    order_days: formData.days,
+                    order_ccid: str_ccid,
+                    order_qty: formData.quantity,
+                    order_product_price: paket_price,
+                    order_cobrain_price: cobrain_price,
+                    order_product_total_price: total_product_price,
+                    package_name: packet_name,
+                    cobrand_id: formData.partner_id,
+                    order_source: 'Web'
                 }
                 
                 console.log("formData.seq: ",formData.seq);
@@ -412,7 +494,7 @@ const EditOrder = () => {
         console.log("data : ", formData);
         
         //get paket product
-        fetchProductDetail(formData.country,formData.days,formData.fup);
+        fetchProductDetail(formData.country,formData.days,formData.fup,formData.partner_id);
         
         
         //await addProduct(formData);
@@ -441,21 +523,26 @@ const EditOrder = () => {
     };
   
     const fetchCountryList = async () => {
-          let end_point = apiUrl + "country";
+          let end_point = "country";
           axios
               .get(end_point)
               .then((response) => {
                   setCountry(response.data);
               })
               .catch((error) => {
-                  console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
               });
     }
 
 
     const addOrder = async (order: orderList) => {
             try {
-                const response = await axios.post(ApiConfig.apiUrl + 'orders', order);
+                const response = await axios.post('orders', order);
                 const addOrder = response.data;
                 //setProducts((prevProduct) => [...prevProduct, addOrder]);
             } catch (error) {
@@ -465,7 +552,7 @@ const EditOrder = () => {
 
     const addOrderEvent = async (orderEvent: orderEventList) => {
         try {
-            const response = await axios.post(ApiConfig.apiUrl + 'order/event', orderEvent);
+            const response = await axios.post('order/event', orderEvent);
             const addOrderEvent = response.data;
         } catch (error) {
             console.error('Error adding order events :', error);
@@ -474,7 +561,7 @@ const EditOrder = () => {
 
     const updateOrder = async (seq: number,order: orderList) => {
         try {
-            const response = await axios.put(ApiConfig.apiUrl + 'orders/update/'+ seq, order);
+            const response = await axios.put('orders/update/'+ seq, order);
             const addOrder = response.data;
             //setProducts((prevProduct) => [...prevProduct, addOrder]);
         } catch (error) {
@@ -654,8 +741,8 @@ const EditOrder = () => {
                                 name="type"
                                 row
                             >
-                                <FormControlLabel value="Simcard" control={<Radio />} label="Simcard" />
-                                <FormControlLabel value="eSIM" control={<Radio />} label="eSIM" />
+                                <FormControlLabel value="SIM" control={<Radio />} label="Simcard" />
+                                <FormControlLabel value="ESIM" control={<Radio />} label="eSIM" />
                             </RadioGroup>
                         </Grid>
 

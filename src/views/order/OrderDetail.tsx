@@ -34,12 +34,8 @@ import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import { IconEdit, IconEye, IconHistory } from '@tabler/icons-react';
-import { numberFormat, orderList, formatDate, InventoryUpdate, currentDate, orderEventList } from "src/utils/Utils";
-
-//api
-import ApiConfig  from "src/constants/apiConstants";
+import { numberFormat, orderList, ordersList, formatDate, InventoryUpdate, currentDate, orderEventList } from "src/utils/Utils";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router';
 import { fontSize } from '@mui/system';
@@ -47,7 +43,9 @@ import { size } from 'lodash';
 import { mt } from 'date-fns/locale';
 import { forEach } from 'node_modules/@tiptap/core/dist/commands';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 const BCrumb = [
     {
@@ -68,26 +66,27 @@ const OrderDetail = () => {
     const [userSession, setUserSession] = React.useState('');
 
     useEffect(() => {
-        const data_success_login = localStorage.getItem('data_success_login');
-        if (data_success_login) {
-            const parsedData = JSON.parse(data_success_login);
-            console.log('user_name:', parsedData.user_name);
-            console.log('session_name:', parsedData.session_name);
-            console.log('session_level:', parsedData.session_level);
-            console.log('last_login_time:', parsedData.last_login_time);
-            console.log('blocked:', parsedData.blocked);
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken:any = jwtDecode(token);
+
+            console.log('user_name:', decodedToken.user_name);
+            console.log('session_name:', decodedToken.session_name);
+            console.log('session_level:', decodedToken.session_level);
+            console.log('last_login_time:', decodedToken.last_login_time);
+            console.log('blocked:', decodedToken.blocked);
             
-            setUserName(parsedData.user_name);
-            setUserLevel(parsedData.session_level);
-            setUserSession(parsedData.session_name);
+            setUserName(decodedToken.user_name);
+            setUserLevel(decodedToken.session_level);
+            setUserSession(decodedToken.session_name);
 
             console.log("order_id: ",order_id);
             fetchOrderList(order_id);
 
-            if(parsedData.session_level.toLowerCase() === 'partner'){
-                const user_login = parsedData.session_name.split('-')[0];
+            if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+                const user_login = decodedToken.session_name.split('-')[0];
                 
-            }else if(parsedData.session_level.toLowerCase() === 'agent-manager'){
+            }else if(decodedToken.session_level.toLowerCase() === 'agent-manager'){
                 
             }else{
                 
@@ -95,28 +94,34 @@ const OrderDetail = () => {
         }else{
             router('/auth/login');
         }
+        
     }, []);
 
     const [orderList, setOrderList] = React.useState([]);
-    const rows: orderList[] = orderList;
+    const rows: ordersList[] = orderList;
     
     const fetchOrderList = async (orderId:string) => {
-        let end_point = apiUrl + "orders/id/"+orderId;
+        let end_point = "orders/id/"+orderId;
         axios
             .get(end_point)
             .then((response) => {
                 console.log("order_detail: ",response.data);
-                setOrderList(response.data);
+                setOrderList(response.data.orders);
             })
             .catch((error) => {
-                console.log(error);
+                if (error.response && error.response.status === 403 || error.response.status === 401) {
+                    // Token expired → redirect ke login
+                    router('/auth/login');
+                } else {
+                    console.log(error);
+                }
             });
     }
 
     const handleApprove = async (order_id:string) => {
         //console.log("Approval");
         try {
-            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Approved");
+            const response = await axios.get('orders/update/'+order_id+"/Approved");
             const updateStatus = response.data;
             if(updateStatus){
                 if(updateStatus.order_id === order_id){
@@ -126,14 +131,17 @@ const OrderDetail = () => {
                     let strPaketId = '';
                     let strSellingPrice = 0;
 
+                    console.log("order xxx: ",rows);
                     rows.forEach((order) => {
                         console.log("CCID: ",order.order_ccid);
+                        console.log("country_name: ",order.country_name);
+                        console.log("package_id: ",order.package_id);
                         strCCID = order.order_ccid;
-                        strCountryID = order.order_country_code;
-                        strPaketId = order.order_product;
-                        strSellingPrice = order.order_product_price;
+                        strCountryID = order.country_name;
+                        strPaketId = order.package_id;
+                        strSellingPrice = order.total_order;
                     });
-                    const hasDelimiter = strCCID.includes('|');
+                    const hasDelimiter = strCCID.includes(',');
                     const updateInvSIM = {
                         out_date: currentDate(),
                         status: 'Used',
@@ -143,8 +151,10 @@ const OrderDetail = () => {
                         selling_price: strSellingPrice
                     }
 
+                    console.log("updateInvSIM: ",updateInvSIM);
+
                     if(hasDelimiter){
-                        const parsed = strCCID.split("|");
+                        const parsed = strCCID.split(",");
                         console.log("length: ",parsed.length);
 
                         parsed.forEach(async (ccid) => {
@@ -156,6 +166,7 @@ const OrderDetail = () => {
                         console.log("delimiter false");
                         await updateInventorySIM(strCCID,updateInvSIM);
                     }
+
 
                     //update hsitory
                     const event_date = currentDate();
@@ -180,7 +191,7 @@ const OrderDetail = () => {
 
     const handleConfirm = async (order_id:string) => {
         try {
-            const response = await axios.get(ApiConfig.apiUrl + 'orders/update/'+order_id+"/Paid");
+            const response = await axios.get('orders/update/'+order_id+"/Paid");
             const updateStatus = response.data;
             if(updateStatus){
                 if(updateStatus.order_id === order_id){
@@ -204,14 +215,75 @@ const OrderDetail = () => {
             console.error('Error adding order events :', error);
         }
     }
-    const handleCancel = () => {
-        router('/order/list');
+    const handleCancel = async () => {
+        try {
+            const response = await axios.get('orders/update/'+order_id+"/Cancelled");
+            const updateStatus = response.data;
+            if(updateStatus){
+                if(updateStatus.order_id === order_id){
+                    //update inv sim
+                    let strCCID = '';
+                    let strCountryID = '';
+                    let strPaketId = '';
+                    let strSellingPrice = 0;
+
+                    rows.forEach((order) => {
+                        strCCID = order.order_ccid;
+                        strCountryID = order.country_name;
+                        strPaketId = order.package_id;
+                        strSellingPrice = order.total_order;
+                    });
+                    
+                    const hasDelimiter = strCCID.includes(',');
+                    const updateInvSIM = {
+                        out_date: null,
+                        status: 'Ready',
+                        order_id: null,
+                        country_id: null,
+                        package_id: null,
+                        selling_price: 0
+                    }
+
+                    if(hasDelimiter){
+                        const parsed = strCCID.split(",");
+                        console.log("length: ",parsed.length);
+
+                        parsed.forEach(async (ccid) => {
+                            console.log("CCID PARSE: ",ccid);
+                            //update inv sim
+                            await updateInventorySIM(ccid,updateInvSIM);
+                        });
+                    }else{
+                        console.log("delimiter false");
+                        await updateInventorySIM(strCCID,updateInvSIM);
+                    }
+                    
+                    //update hsitory
+                    const event_date = currentDate();
+                    const dataOrderEvent = {
+                        seq: 0,
+                        order_id: order_id,
+                        event_name: 'Cancel Order',
+                        event_date: event_date,
+                        username: userName
+                    }
+                    await addOrderEvent(dataOrderEvent);
+
+                    router('/order/list');
+                }
+            }else{
+                console.error('Error update status gagal');    
+            }
+        } catch (error) {
+            console.error('Error adding order events :', error);
+        }
+        
     }
 
     //update inventory
     const updateInventorySIM = async (ccid:string,updatedInventory: InventoryUpdate) => {
         try {
-            const response = await axios.put(ApiConfig.apiUrl + 'inventory/ccid/'+ccid, updatedInventory);
+            const response = await axios.put('inventory/ccid/'+ccid, updatedInventory);
             const updated = response.data;
             console.log("res updated: ", updated);
         } catch (error) {
@@ -222,7 +294,7 @@ const OrderDetail = () => {
     //update history
     const addOrderEvent = async (orderEvent: orderEventList) => {
         try {
-            const response = await axios.post(ApiConfig.apiUrl + 'order/event', orderEvent);
+            const response = await axios.post('order/event', orderEvent);
             const addOrderEvent = response.data;
         } catch (error) {
             console.error('Error adding order events :', error);
@@ -231,12 +303,12 @@ const OrderDetail = () => {
 
     return (
         <PageContainer title="Order" description="this is order detail page">
-            <Breadcrumb title="Order" items={BCrumb} />
+            {/*<Breadcrumb title="Order" items={BCrumb} />*/}
             <ParentCard title="Order Detail">
                 <BlankCard>
                     <Box m={2}>
                         {rows.map((row) => (
-                        <Grid key={row.seq}>
+                        <Grid key={row.order_id}>
                             <Grid container spacing={1}>
                                 <Grid size={{ xs: 2 }}>
                                     <Typography variant="h6">
@@ -287,7 +359,7 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 4 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_agent_code}
+                                        : {row.agent_code}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12 }} mt={2} mb={2}>
@@ -300,7 +372,7 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 4 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_customer_name}
+                                        : {row.customer_name}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
@@ -310,7 +382,7 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 4 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_contact_email}
+                                        : {row.email_address}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
@@ -320,7 +392,7 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 4 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_contact_phone}
+                                        : {row.contact_phone}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
@@ -330,7 +402,7 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 4 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_contact_wa}
+                                        : {row.contact_wa}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12 }} mt={2} mb={2}>
@@ -343,9 +415,10 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_qty}
+                                        : {row.order_quantity}
                                     </Typography>
                                 </Grid>
+                                {/*
                                 <Grid size={{ xs: 2 }}>
                                     <Typography variant="h6">
                                         Unit Price
@@ -353,9 +426,10 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
-                                        : {numberFormat(row.order_product_price)}
+                                        : {numberFormat(row.total_order)}
                                     </Typography>
                                 </Grid>
+                                */}
                                 <Grid size={{ xs: 2 }}>
                                     <Typography variant="h6">
                                         Harga NTA
@@ -363,17 +437,17 @@ const OrderDetail = () => {
                                 </Grid>
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
-                                        : {numberFormat(row.order_product_total_price)}
+                                        : {numberFormat(row.total_order)}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
                                     <Typography variant="h6">
-                                       Country Code
+                                       Country List
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_country_code}
+                                        : {row.country_name}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
@@ -384,7 +458,7 @@ const OrderDetail = () => {
                                 
                                 <Grid size={{ xs: 10 }}>
                                     <Typography variant="subtitle1">
-                                        : {row.order_product}
+                                        : {row.package_id}
                                     </Typography>
                                 </Grid>
                                 <Grid size={{ xs: 2 }}>
@@ -402,7 +476,7 @@ const OrderDetail = () => {
                                         ICCID List
                                     </Typography>
                                 </Grid>
-                                <Grid size={{ xs: 10 }}>
+                                <Grid size={{ xs: 10 }} style={{ wordBreak: 'break-all' }}>
                                     <Typography variant="subtitle1">
                                         : {row.order_ccid.replace('|',',')}
                                     </Typography>
@@ -419,7 +493,7 @@ const OrderDetail = () => {
                                                     Confirm Order
                                                 </Button>
                                             ):(
-                                                row.order_status === 'Paid' ? (
+                                                row.order_status === 'Paid' || row.order_status === 'Cancelled' || row.order_status === 'Closed' ? (
                                                     <></>
                                                 ):(
                                                     <Button
@@ -432,7 +506,7 @@ const OrderDetail = () => {
                                                 )
                                             )
                                         }
-                                        {row.order_status === 'Paid' ? (
+                                        {row.order_status === 'Paid' || row.order_status === 'Cancelled' || row.order_status === 'Closed' ? (
                                             <></>
                                         ):(
                                             <>
@@ -449,7 +523,27 @@ const OrderDetail = () => {
                                         }
                                         </>
                                     ):(
-                                        <></>
+                                        row.order_status === 'New' ? (
+                                            <>
+                                                <Button
+                                                    variant="contained" 
+                                                    color="primary"
+                                                    onClick={() => handleApprove(row.order_id)}
+                                                >
+                                                    Approve Order
+                                                </Button>
+                                                &nbsp;&nbsp;&nbsp;
+                                                <Button
+                                                    variant="contained" 
+                                                    color="secondary"
+                                                    onClick={handleCancel}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </>
+                                        ):(
+                                            <></>
+                                        )    
                                     )}
                                 </Grid>
                             </Grid>

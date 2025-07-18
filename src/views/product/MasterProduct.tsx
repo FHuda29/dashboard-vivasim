@@ -27,21 +27,17 @@ import FirstPageIcon from '@mui/icons-material/FirstPage';
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import LastPageIcon from '@mui/icons-material/LastPage';
-
-import Breadcrumb from 'src/layouts/full/shared/breadcrumb/Breadcrumb';
 import PageContainer from 'src/components/container/PageContainer';
-import ParentCard from 'src/components/shared/ParentCard';
 import BlankCard from '../../components/shared/BlankCard';
-import { Link } from 'react-router';
-
+import { Link, useNavigate } from 'react-router';
 import { numberFormat, ProductList, formatDate } from "src/utils/Utils";
-//api
-import ApiConfig  from "src/constants/apiConstants";
 import { useEffect } from 'react';
-import axios from 'axios';
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 
-const apiUrl = ApiConfig.apiUrl;
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
+import ParentCard from 'src/components/shared/ParentCard';
 
 interface TablePaginationActionsProps {
   count: number;
@@ -112,6 +108,7 @@ const BCrumb = [
 ];
 
 const MasterProduct = () => {
+    const router = useNavigate();
     useEffect(() => {
         //load product
         fetchProductMaster();
@@ -120,7 +117,7 @@ const MasterProduct = () => {
 
   //get all product
   const fetchProductMaster = async () => {
-    let end_point = apiUrl + "products";
+    let end_point = "products";
     axios
         .get(end_point)
         .then((response) => {
@@ -128,7 +125,12 @@ const MasterProduct = () => {
             setProductMaster(response.data);
         })
         .catch((error) => {
-            console.log(error);
+           if (error.response && error.response.status === 403 || error.response.status === 401) {
+            // Token expired → redirect ke login
+              router('/auth/login');
+            } else {
+              console.log(error);
+            }
         });
   }
 
@@ -148,14 +150,19 @@ const MasterProduct = () => {
       
       const strtValue = event.target.value;
       if(strtValue.length !== 0){
-          let end_point = apiUrl + "products/search?param="+strtValue;
+          let end_point = "products/search?param="+strtValue;
           axios
               .get(end_point)
               .then((response) => {
                 setProductMaster(response.data);
               })
               .catch((error) => {
-                  console.log(error);
+                  if (error.response && error.response.status === 403 || error.response.status === 401) {
+                  // Token expired → redirect ke login
+                    router('/auth/login');
+                  } else {
+                    console.log(error);
+                  }
               });
       }else{
           fetchProductMaster();
@@ -185,7 +192,7 @@ const MasterProduct = () => {
   return (
     <PageContainer title="Products" description="this is products page">
       {/* breadcrumb */}
-      <Breadcrumb title="Products" items={BCrumb} />
+      {/*<Breadcrumb title="Products" items={BCrumb} />*/}
       {/* end breadcrumb */}
       <ParentCard title="Master Product List">
           <Box mb={2}>
@@ -323,7 +330,7 @@ const MasterProduct = () => {
 
                 {emptyRows > 0 && (
                   <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={7} />
+                    <TableCell colSpan={1} />
                   </TableRow>
                 )}
               </TableBody>
@@ -331,7 +338,7 @@ const MasterProduct = () => {
                 <TableRow>
                   <TablePagination
                     rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                    colSpan={7}
+                    colSpan={1}
                     count={rows.length}
                     rowsPerPage={rowsPerPage}
                     page={page}

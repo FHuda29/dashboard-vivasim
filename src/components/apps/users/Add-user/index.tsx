@@ -5,16 +5,8 @@ import {
   Alert,
   Button,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Typography,
   IconButton,
-  Tooltip,
   Box,
   Stack,
   Divider,
@@ -22,16 +14,15 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { useNavigate } from 'react-router';
-//import { format, isValid } from 'date-fns';
-//import { IconPlus, IconSquareRoundedPlus, IconTrash } from '@tabler/icons-react';
 import CustomFormLabel from 'src/components/forms/theme-elements/CustomFormLabel';
-//import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import CustomTextField from 'src/components/forms/theme-elements/CustomTextField';
-import axios from 'axios';
-import ApiConfig  from "src/constants/apiConstants";
 import CustomSelect from 'src/components/forms/theme-elements/CustomSelect';
 import { VisibilityOff, Visibility } from '@mui/icons-material';
-const apiUrl = ApiConfig.apiUrl;
+
+//api
+import axios from 'src/api/axios';
+import { jwtDecode } from 'jwt-decode';
+
 
 const CreateUser = () => {
   const [partners, setPartners] = React.useState([]);
@@ -67,24 +58,18 @@ const CreateUser = () => {
 
   useEffect(() => {
     
-    const data_success_login = localStorage.getItem('data_success_login');
-    if (data_success_login) {
-        const parsedData = JSON.parse(data_success_login);
-        //console.log('user_name:', parsedData.user_name);
-        console.log('session_name:', parsedData.session_name);
-        console.log('session_level:', parsedData.session_level);
-        //console.log('last_login_time:', parsedData.last_login_time);
-        //console.log('blocked:', parsedData.blocked);
-
-        setUserLevel(parsedData.session_level);
-        setUserSession(parsedData.session_name);
+    const token = localStorage.getItem('token');
+      if (token) {
+        const decodedToken:any = jwtDecode(token);
+        setUserLevel(decodedToken.session_level);
+        setUserSession(decodedToken.session_name);
         setFormData((prevData: any) => ({
           ...prevData,
-          session_name: parsedData.session_name
+          session_name: decodedToken.session_name
         }));
 
-        if(parsedData.session_level.toLowerCase() === 'partner'){
-          fetchAgentListCobrand(parsedData.session_name);
+        if(decodedToken.session_level.toLowerCase() === 'partner' || decodedToken.session_level.toLowerCase() === 'partner-admin'){
+          fetchAgentListCobrand(decodedToken.session_name);
           fetchLevelByCode('AGENT');
         }else{
           //list partner
@@ -92,8 +77,7 @@ const CreateUser = () => {
           //list levels
           fetchLevelList();
         }
-    }
-    
+      }
     
 
     if (users.length > 0) {
@@ -149,7 +133,7 @@ const CreateUser = () => {
 
   
   const fetchPartnerList = async () => {
-      let end_point = apiUrl + "partners";
+      let end_point = "partners";
       axios
           .get(end_point)
           .then((response) => {
@@ -162,7 +146,7 @@ const CreateUser = () => {
   }
 
   const fetchAgentListCobrand = async (cobrand_id:string) => {
-    let end_point = apiUrl + "agents/cobrand/"+cobrand_id;
+    let end_point = "agents/cobrand/"+cobrand_id;
     axios
         .get(end_point)
         .then((response) => {
@@ -174,7 +158,7 @@ const CreateUser = () => {
   }
 
   const fetchLevelList = async () => {
-    let end_point = apiUrl + "levels";
+    let end_point = "levels";
     axios
         .get(end_point)
         .then((response) => {
@@ -187,7 +171,7 @@ const CreateUser = () => {
   }
 
   const fetchLevelByCode = async (level_code:string) => {
-    let end_point = apiUrl + "levels/code/"+level_code;
+    let end_point = "levels/code/"+level_code;
     axios
         .get(end_point)
         .then((response) => {
@@ -309,7 +293,7 @@ const CreateUser = () => {
               }}
             />
           </Grid>
-          {userLevel.toLowerCase() === 'partner' ? (
+          {userLevel.toLowerCase() === 'partner' || userLevel.toLowerCase() === 'partner-admin' ? (
             <Grid
             size={{
               xs: 12,
